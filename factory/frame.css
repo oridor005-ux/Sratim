@@ -1,37 +1,39 @@
 /* עיצוב משותף. מסך הצילום הוא 540x960 בנקודות, מוכפל פי 2 = 1080x1920 */
+/* גופן: רוביק (רישיון פתוח, ראו fonts/RUBIK-LICENSE.txt) — עגול ומודרני */
+@font-face {
+  font-family: "Rubik";
+  src: url("fonts/rubik-hebrew-wght-normal.woff2") format("woff2");
+  font-weight: 300 900;
+  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+}
+@font-face {
+  font-family: "Rubik";
+  src: url("fonts/rubik-latin-wght-normal.woff2") format("woff2");
+  font-weight: 300 900;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2190-21FF, U+2212, U+2215;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; overflow: hidden; }
 body {
-  font-family: "Noto Sans Hebrew", "Rubik", "Assistant", "DejaVu Sans", "Liberation Sans", sans-serif;
-  background: #0f1b2d;
-  color: #fff;
+  font-family: "Rubik", "Noto Sans Hebrew", "DejaVu Sans", sans-serif;
+  background: #eaf4ff;
+  color: #1f2a44;
   position: relative;
 }
+svg text { font-family: "Rubik", "Noto Sans Hebrew", sans-serif; }
 #caption {
   position: absolute;
-  left: 22px; right: 22px; bottom: 70px;
+  left: 26px; right: 26px; bottom: 64px;
   text-align: center;
   white-space: pre-line;
-  font-size: 27px;
-  font-weight: 700;
-  line-height: 1.35;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.62);
-  color: #fff;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 14px 18px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1f2a44;
+  box-shadow: 0 10px 30px rgba(31, 42, 68, 0.18);
   opacity: 0;
   z-index: 50;
-}
-.title {
-  position: absolute; left: 0; right: 0; top: 46px;
-  text-align: center; font-size: 34px; font-weight: 800;
-  text-shadow: 0 2px 10px rgba(0,0,0,.4);
-  z-index: 40;
-}
-.tag {
-  position: absolute; font-size: 17px; font-weight: 700;
-  padding: 4px 10px; border-radius: 9px;
-  background: rgba(255,255,255,.92); color: #13233a;
-  transform: translate(-50%, -50%); white-space: nowrap;
-  z-index: 30;
 }
