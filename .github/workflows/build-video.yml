@@ -1,0 +1,84 @@
+name: בניית סרטון
+
+on:
+  push:
+    paths:
+      - "videos/*/script.json"
+      - "videos/*/animation.html"
+      - "videos/*/assets/**"
+      - "factory/**"
+  workflow_dispatch:
+    inputs:
+      folder:
+        description: "שם תיקיית הסרטון (למשל 01-dud-shemesh). ריק = כל הסרטונים שהשתנו"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-video
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: אילו סרטונים לבנות
+        id: which
+        run: |
+          if [ -n "${{ github.event.inputs.folder }}" ]; then
+            echo "list=${{ github.event.inputs.folder }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || true)
+          if echo "$CHANGED" | grep -q '^factory/'; then
+            # שינוי במנוע לא בונה מחדש את כל הסרטונים — רק את מה שהשתנה בתיקיות הסרטונים
+            :
+          fi
+          LIST=$(echo "$CHANGED" | grep -E '^videos/[^/]+/(script\.json|animation\.html|assets/)' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+          echo "list=$LIST" >> "$GITHUB_OUTPUT"
+          echo "לבנות: $LIST"
+
+      - uses: actions/setup-python@v5
+        if: steps.which.outputs.list != ''
+        with:
+          python-version: "3.12"
+
+      - name: התקנת כלים (ממקורות רשמיים בלבד)
+        if: steps.which.outputs.list != ''
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-noto-core fonts-culmus fonts-noto-color-emoji
+          pip install -r factory/requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: בנייה
+        if: steps.which.outputs.list != ''
+        run: |
+          for v in ${{ steps.which.outputs.list }}; do
+            echo "=== $v ==="
+            python factory/build.py "videos/$v"
+          done
+
+      - name: שמירת הסרטונים במאגר
+        if: steps.which.outputs.list != ''
+        run: |
+          git config user.name "video-factory"
+          git config user.email "video-factory@users.noreply.github.com"
+          git add videos/*/out/
+          git commit -m "סרטון מוכן: ${{ steps.which.outputs.list }}" || exit 0
+          git pull --rebase
+          git push
+
+      - name: העלאה כקובץ להורדה
+        if: steps.which.outputs.list != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos
+          path: videos/*/out/video.mp4

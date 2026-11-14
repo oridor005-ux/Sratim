@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>איך עובד דוד שמש</title>
+<link rel="stylesheet" href="../../factory/frame.css">
+<style>
+  body { background: #0f1b2d; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  text { font-family: "Noto Sans Hebrew", "DejaVu Sans", sans-serif; font-weight: 700; }
+  .lbl { font-size: 19px; fill: #13233a; }
+  .lblbox { fill: rgba(255,255,255,.93); }
+</style>
+<script src="../../factory/frame.js"></script>
+</head>
+<body>
+<svg id="s" viewBox="0 0 540 960" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop id="sky1" offset="0" stop-color="#3a8ee6"/>
+      <stop id="sky2" offset="1" stop-color="#bfe3ff"/>
+    </linearGradient>
+    <linearGradient id="tankFill" x1="0" y1="0" x2="0" y2="1">
+      <stop id="tk1" offset="0" stop-color="#2f80ed"/>
+      <stop id="tk2" offset="0.5" stop-color="#2f80ed"/>
+      <stop offset="1" stop-color="#2f80ed"/>
+    </linearGradient>
+    <radialGradient id="sunGlow">
+      <stop offset="0" stop-color="#fff6b0"/>
+      <stop offset="0.5" stop-color="#ffd23f"/>
+      <stop offset="1" stop-color="#ffd23f" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+
+  <!-- שמיים -->
+  <rect x="0" y="0" width="540" height="960" fill="url(#sky)"/>
+
+  <!-- שמש -->
+  <g id="sun">
+    <circle cx="90" cy="190" r="95" fill="url(#sunGlow)"/>
+    <circle cx="90" cy="190" r="44" fill="#ffd23f"/>
+  </g>
+  <g id="rays" stroke="#ffe066" stroke-width="5" stroke-linecap="round"></g>
+
+  <!-- עננים -->
+  <g id="clouds" fill="#e9eef5">
+    <g id="cloud1"><ellipse cx="0" cy="0" rx="70" ry="34"/><ellipse cx="-45" cy="10" rx="45" ry="26"/><ellipse cx="50" cy="12" rx="48" ry="25"/></g>
+    <g id="cloud2"><ellipse cx="0" cy="0" rx="58" ry="28"/><ellipse cx="40" cy="8" rx="38" ry="22"/><ellipse cx="-38" cy="9" rx="36" ry="20"/></g>
+  </g>
+
+  <!-- בית -->
+  <rect x="40" y="540" width="460" height="300" fill="#f3e7d3"/>
+  <rect x="40" y="532" width="460" height="14" fill="#8a6d52"/>
+  <rect x="40" y="840" width="460" height="120" fill="#6f8f5a"/>
+  <!-- חלון לתוך הבית -->
+  <rect x="300" y="590" width="180" height="170" rx="10" fill="#fdfaf4" stroke="#c9b79c" stroke-width="4"/>
+  <!-- כיור -->
+  <path d="M365 735 h110 v12 a20 20 0 0 1 -20 20 h-70 a20 20 0 0 1 -20 -20 z" fill="#d9e2ea" stroke="#9aa9b6" stroke-width="3"/>
+  <!-- ברז -->
+  <g id="faucet">
+    <rect x="412" y="672" width="10" height="20" fill="#8c99a6"/>
+    <path d="M405 668 h40 v10 h-12 v14 h-10 v-14 h-18 z" fill="#aab6c2"/>
+    <g id="handle"><rect x="434" y="656" width="22" height="7" rx="3" fill="#d64545"/></g>
+  </g>
+  <g id="stream"></g>
+
+  <!-- מעמד הדוד -->
+  <g stroke="#7d8790" stroke-width="6">
+    <line x1="330" y1="400" x2="330" y2="532"/>
+    <line x1="460" y1="400" x2="460" y2="532"/>
+  </g>
+
+  <!-- צינורות -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="12" stroke="#9aa5ae">
+    <path id="pRiser" d="M240 402 L240 368 L312 368"/>
+    <path id="pReturn" d="M330 398 L330 552 L165 552 L165 534"/>
+    <path id="pMains" d="M545 500 L500 500 L500 392 L478 392"/>
+    <path id="pOut" d="M440 330 L440 300 L520 300 L520 630 L417 630 L417 668"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="7">
+    <path id="cRiser" d="M240 402 L240 368 L312 368" stroke="#c0392b" opacity="0"/>
+    <path id="cReturn" d="M330 398 L330 552 L165 552 L165 534" stroke="#2f80ed" opacity="0"/>
+    <path id="cMains" d="M545 500 L500 500 L500 392 L478 392" stroke="#2f80ed" opacity="0.35"/>
+    <path id="cOut" d="M440 330 L440 300 L520 300 L520 630 L417 630 L417 668" stroke="#c0392b" opacity="0.35"/>
+  </g>
+  <g id="dots"></g>
+
+  <!-- קולט -->
+  <g id="collector">
+    <polygon points="95,534 235,534 300,402 160,402" fill="#1d2733" stroke="#55606b" stroke-width="5"/>
+    <g id="tubes" stroke-width="5" stroke-linecap="round"></g>
+    <polygon id="glass" points="95,534 235,534 300,402 160,402" fill="#bfe3ff" opacity="0.12"/>
+  </g>
+
+  <!-- דוד -->
+  <g id="tank">
+    <rect id="insul" x="302" y="322" width="186" height="86" rx="43" fill="#ffd166" opacity="0"/>
+    <rect x="308" y="328" width="174" height="74" rx="37" fill="url(#tankFill)" stroke="#e8edf2" stroke-width="6"/>
+    <path id="element" d="M352 386 l10 -10 l10 10 l10 -10 l10 10 l10 -10 l10 10 l10 -10 l10 10" fill="none" stroke="#555" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <!-- תוויות -->
+  <g id="labels"></g>
+
+  <!-- כותרת -->
+  <g id="titleG">
+    <text id="title" x="270" y="82" text-anchor="middle" font-size="38" fill="#fff" style="paint-order:stroke" stroke="#13233a" stroke-width="7">איך עובד דוד שמש?</text>
+  </g>
+</svg>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const { clamp, lerp, ease, span, $ } = H;
+const mk = (tag, attrs, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  (parent || $("s")).appendChild(e);
+  return e;
+};
+const mix = (c1, c2, k) => {
+  const a = c1.match(/\w\w/g).map((h) => parseInt(h, 16));
+  const b = c2.match(/\w\w/g).map((h) => parseInt(h, 16));
+  return "#" + a.map((v, i) => Math.round(lerp(v, b[i], k)).toString(16).padStart(2, "0")).join("");
+};
+const BLUE = "#2f80ed", RED = "#e8452c", WARM = "#f39c12";
+
+// חלקיקי מים לאורך צינור
+const flows = {};
+function makeFlow(name, color, n) {
+  const path = $(name);
+  const L = path.getTotalLength();
+  const g = mk("g", {}, $("dots"));
+  const dots = [];
+  for (let i = 0; i < n; i++) dots.push(mk("circle", { r: 4.2, fill: color }, g));
+  flows[name] = { path, L, dots, pos: 0 };
+}
+function drawFlow(name, offset, visible) {
+  const f = flows[name];
+  const step = f.L / f.dots.length;
+  f.dots.forEach((d, i) => {
+    const at = (((offset + i * step) % f.L) + f.L) % f.L;
+    const pt = f.path.getPointAtLength(at);
+    d.setAttribute("cx", pt.x);
+    d.setAttribute("cy", pt.y);
+    d.setAttribute("opacity", visible);
+  });
+}
+
+// תוויות
+const labels = {};
+function label(key, text, x, y) {
+  const g = mk("g", { opacity: 0 }, $("labels"));
+  const t = mk("text", { x, y: y + 7, "text-anchor": "middle", class: "lbl" }, g);
+  t.textContent = text;
+  const w = text.length * 10.5 + 22;
+  const r = mk("rect", { x: x - w / 2, y: y - 17, width: w, height: 34, rx: 9, class: "lblbox" }, g);
+  g.insertBefore(r, t);
+  labels[key] = g;
+}
+
+const tubes = [];
+const rays = [];
+const drops = [];
+
+window.init = function () {
+  // צינורות בתוך הקולט
+  for (let i = 0; i < 6; i++) {
+    const k = (i + 0.5) / 6;
+    tubes.push(mk("line", { x1: lerp(95, 235, k), y1: 530, x2: lerp(160, 300, k), y2: 406, stroke: BLUE }, $("tubes")));
+  }
+  // קרני שמש
+  for (let i = 0; i < 4; i++) rays.push(mk("line", { x1: 0, y1: 0, x2: 0, y2: 0, opacity: 0 }, $("rays")));
+  // סילון מים מהברז
+  for (let i = 0; i < 7; i++) drops.push(mk("circle", { r: 5, fill: "#5aa9f0", opacity: 0 }, $("stream")));
+
+  makeFlow("cRiser", RED, 5);
+  makeFlow("cReturn", BLUE, 9);
+  makeFlow("cMains", BLUE, 8);
+  makeFlow("cOut", RED, 16);
+
+  label("collector", "קולט שמש", 150, 590);
+  label("tank", "דוד מים", 395, 290);
+  label("hot", "למעלה: מים חמים", 395, 298);
+  label("cold", "למטה: מים קרים", 395, 434);
+  label("mains", "מי עירייה", 455, 470);
+  label("riser", "מים חמים עולים", 200, 345);
+  label("return", "מים קרים יורדים", 250, 585);
+  label("element", "גוף חימום חשמלי", 395, 440);
+  label("insul", "בידוד", 262, 300);
+};
+
+// כמה מכל דבר מוצג בכל סצנה
+const ORDER = ["intro", "sun", "thermo", "tank", "tap", "backup", "outro"];
+
+window.drawScene = function (sc, p, t, info, local) {
+  const idx = ORDER.indexOf(sc.id);
+  const is = (id) => sc.id === id;
+  const after = (id) => idx > ORDER.indexOf(id);
+  const fadeIn = (d = 0.8) => clamp(local / d);
+
+  // כותרת: גדולה בפתיחה, נעלמת אחר כך
+  const titleOp = is("intro") ? 1 : is("outro") ? fadeIn() : clamp(1 - local / 0.6) * (idx === 1 ? 1 : 0);
+  $("titleG").setAttribute("opacity", titleOp);
+  const ts = is("intro") ? lerp(0.85, 1, ease(fadeIn(1.2))) : 1;
+  $("titleG").setAttribute("transform", `translate(270 82) scale(${ts}) translate(-270 -82)`);
+
+  // שמש ועננים
+  const cloudy = is("backup") ? ease(fadeIn(1.5)) : is("outro") ? 1 - ease(fadeIn(1.2)) : 0;
+  $("cloud1").setAttribute("transform", `translate(${lerp(-120, 95, cloudy)} 185)`);
+  $("cloud2").setAttribute("transform", `translate(${lerp(-90, 150, cloudy)} 230)`);
+  $("sky1").setAttribute("stop-color", mix("3a8ee6", "7f8fa3", cloudy));
+  $("sky2").setAttribute("stop-color", mix("bfe3ff", "c9d1da", cloudy));
+  $("sun").setAttribute("transform", `translate(90 190) scale(${1 + 0.04 * Math.sin(t * 3)}) translate(-90 -190)`);
+
+  // קרניים
+  const raysOn = (idx >= 1 ? (is("sun") ? fadeIn(1) : 1) : 0) * (1 - cloudy);
+  rays.forEach((r, i) => {
+    const k = ((t * 0.9 + i / 4) % 1);
+    const sx = 130, sy = 225, ex = lerp(150, 270, i / 3), ey = lerp(470, 420, i / 3);
+    const a = clamp(k - 0.15), b = clamp(k + 0.15);
+    r.setAttribute("x1", lerp(sx, ex, a)); r.setAttribute("y1", lerp(sy, ey, a));
+    r.setAttribute("x2", lerp(sx, ex, b)); r.setAttribute("y2", lerp(sy, ey, b));
+    r.setAttribute("opacity", raysOn);
+  });
+
+  // חום הקולט
+  const collHeat = idx === 0 ? 0 : is("sun") ? ease(span(local, 0.5, 4)) : is("backup") ? 1 - cloudy * 0.8 : 1;
+  tubes.forEach((tb) => tb.setAttribute("stroke", mix("2f80ed", "e8452c", collHeat)));
+
+  // חום המים בדוד
+  let heat = 0;
+  if (is("sun")) heat = 0.1 * collHeat;
+  else if (is("thermo")) heat = lerp(0.1, 0.85, ease(p));
+  else if (idx >= 3) heat = 0.9;
+  if (is("tap")) heat = 0.9 - 0.12 * ease(p);
+  if (is("backup")) heat = lerp(0.78, 0.92, ease(span(local, 1.5, 6)));
+  if (is("outro")) heat = 0.92;
+  $("tk1").setAttribute("stop-color", mix("2f80ed", "e8452c", heat));
+  $("tk2").setAttribute("offset", lerp(0.15, 0.62, heat));
+  $("tk2").setAttribute("stop-color", mix("2f80ed", "f39c12", heat * 0.9));
+
+  // בידוד
+  $("insul").setAttribute("opacity", is("tank") ? 0.55 * (0.6 + 0.4 * Math.sin(local * 4)) * fadeIn() : 0);
+
+  // גוף חימום
+  const elem = is("backup") ? ease(span(local, 1.2, 3)) : 0;
+  $("element").setAttribute("stroke", mix("555555", "ff7a1a", elem));
+  $("element").setAttribute("stroke-width", 4 + elem * 2);
+
+  // זרימה בתרמוסיפון (קולט <-> דוד)
+  let thermo = 0;
+  if (is("sun")) thermo = 0.3 * ease(span(local, 2, 5));
+  else if (is("thermo")) thermo = 1;
+  else if (is("tank") || is("tap") || is("outro")) thermo = 0.5;
+  else if (is("backup")) thermo = 0.5 * (1 - cloudy);
+  $("cRiser").setAttribute("opacity", thermo > 0 ? 0.5 : 0);
+  $("cReturn").setAttribute("opacity", thermo > 0 ? 0.5 : 0);
+  // המיקום של החלקיקים = זמן * מהירות (דטרמיניסטי לכל פריים)
+  const thermoSpeed = 45;
+  drawFlow("cRiser", t * thermoSpeed * (thermo > 0.6 ? 1 : 0.5), thermo > 0 ? 1 : 0);
+  drawFlow("cReturn", t * thermoSpeed * (thermo > 0.6 ? 1 : 0.5), thermo > 0 ? 1 : 0);
+
+  // ברז פתוח
+  const tap = is("tap") ? ease(span(local, 0.6, 1.6)) : is("outro") ? 1 - fadeIn(0.8) : 0;
+  $("handle").setAttribute("transform", `rotate(${-50 * tap} 434 660)`);
+  drawFlow("cOut", t * 110, tap > 0.05 ? 1 : 0);
+  drawFlow("cMains", t * 80, tap > 0.05 ? 1 : 0);
+  $("cOut").setAttribute("opacity", 0.35 + 0.4 * tap);
+  $("cMains").setAttribute("opacity", 0.35 + 0.4 * tap);
+  drops.forEach((d, i) => {
+    const k = ((t * 2.2 + i / drops.length) % 1);
+    d.setAttribute("cx", 417 + Math.sin(i * 7) * 1.5);
+    d.setAttribute("cy", lerp(694, 745, k));
+    d.setAttribute("opacity", tap > 0.1 ? 0.9 : 0);
+    d.setAttribute("fill", mix("5aa9f0", "ff8a65", 0.55));
+  });
+
+  // תוויות
+  const show = {
+    collector: is("sun") || is("intro") ? (is("intro") ? span(local, 1.5, 2.3) : 1) : 0,
+    tank: is("intro") ? span(local, 2.3, 3.1) : 0,
+    riser: is("thermo") ? span(local, 1, 1.8) : 0,
+    return: is("thermo") ? span(local, 3, 3.8) : 0,
+    hot: is("tank") ? span(local, 2, 2.6) : 0,
+    cold: is("tank") ? span(local, 3, 3.6) : 0,
+    insul: is("tank") ? span(local, 0.5, 1.2) : 0,
+    mains: is("tap") ? span(local, 2, 2.8) : 0,
+    element: is("backup") ? span(local, 1.5, 2.3) : 0,
+  };
+  for (const k in labels) labels[k].setAttribute("opacity", show[k] || 0);
+};
+</script>
+</body>
+</html>
