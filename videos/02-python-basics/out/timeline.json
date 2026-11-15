@@ -1,0 +1,142 @@
+[
+ {
+  "i": 0,
+  "id": "intro",
+  "start": 0.0,
+  "speechStart": 0.6,
+  "speechEnd": 9.696,
+  "end": 10.396,
+  "say": "What is Python? And why is it the most popular programming language in the world? Let's learn the basics, with real code.",
+  "caption": "What is Python? And why is it the most popular programming language in the world? Let's learn the basics, with real code."
+ },
+ {
+  "i": 1,
+  "id": "what",
+  "start": 10.396,
+  "speechStart": 10.396,
+  "speechEnd": 28.324,
+  "end": 29.024,
+  "say": "Python is a programming language: a way to give instructions to a computer. It was created by Guido van Rossum, and released in 1991. And the name? It doesn't come from the snake. It comes from Monty Python, a British comedy show.",
+  "caption": "Python is a programming language: a way to give instructions to a computer. It was created by Guido van Rossum, and released in 1991. And the name? It doesn't come from the snake. It comes from Monty Python, a British comedy show."
+ },
+ {
+  "i": 2,
+  "id": "where",
+  "start": 29.024,
+  "speechStart": 29.024,
+  "speechEnd": 42.152,
+  "end": 42.852,
+  "say": "You use Python every day without knowing it. It runs parts of Instagram, Netflix and Spotify. Scientists use it to analyze data, and almost every modern A.I. tool is built with it.",
+  "caption": "You use Python every day without knowing it. It runs parts of Instagram, Netflix and Spotify. Scientists use it to analyze data, and almost every modern AI tool is built with it."
+ },
+ {
+  "i": 3,
+  "id": "hello",
+  "start": 42.852,
+  "speechStart": 42.852,
+  "speechEnd": 56.604,
+  "end": 57.304,
+  "say": "Here is your first program. Just one line: print, and some text in quotes. Run it, and the computer prints: Hello, world! In many other languages, this takes five or ten lines.",
+  "caption": "Here is your first program. Just one line: print, and some text in quotes. Run it, and the computer prints: Hello, world! In many other languages, this takes five or ten lines."
+ },
+ {
+  "i": 4,
+  "id": "vars",
+  "start": 57.304,
+  "speechStart": 57.304,
+  "speechEnd": 70.216,
+  "end": 70.916,
+  "say": "A variable is like a labeled box that holds a value. Here, the box called name holds the text Ori, and the box called age holds the number 30. Later, we can use the box by its name.",
+  "caption": "A variable is like a labeled box that holds a value. Here, the box called name holds the text Ori, and the box called age holds the number 30. Later, we can use the box by its name."
+ },
+ {
+  "i": 5,
+  "id": "types",
+  "start": 70.916,
+  "speechStart": 70.916,
+  "speechEnd": 82.628,
+  "end": 83.328,
+  "say": "Every value has a type. Whole numbers are called int. Numbers with a decimal point are float. Text is called a string, and True or False is a boolean.",
+  "caption": "Every value has a type. Whole numbers are called int. Numbers with a decimal point are float. Text is called a string, and True or False is a boolean."
+ },
+ {
+  "i": 6,
+  "id": "lists",
+  "start": 83.328,
+  "speechStart": 83.328,
+  "speechEnd": 96.336,
+  "end": 97.036,
+  "say": "A list holds many values in order, inside square brackets. Append adds a new item to the end. And here's a surprise: counting starts at zero, so fruits zero is the first item, apple.",
+  "caption": "A list holds many values in order, inside square brackets. Append adds a new item to the end. And here's a surprise: counting starts at zero, so fruits zero is the first item, apple."
+ },
+ {
+  "i": 7,
+  "id": "ifs",
+  "start": 97.036,
+  "speechStart": 97.036,
+  "speechEnd": 116.188,
+  "end": 116.888,
+  "say": "With if, the program makes decisions. If age is eighteen or more, print adult. Otherwise, print kid. Notice the spaces at the start of the lines. In Python, this indentation is not just style. It tells Python which lines belong to the if.",
+  "caption": "With if, the program makes decisions. If age is eighteen or more, print adult. Otherwise, print kid. Notice the spaces at the start of the lines. In Python, this indentation is not just style. It tells Python which lines belong to the if."
+ },
+ {
+  "i": 8,
+  "id": "loops",
+  "start": 116.888,
+  "speechStart": 116.888,
+  "speechEnd": 129.968,
+  "end": 130.668,
+  "say": "A for loop repeats an action for every item. For each fruit in the list, print it. Four items, four lines. Whether you have four items or four million, the code stays the same.",
+  "caption": "A for loop repeats an action for every item. For each fruit in the list, print it. Four items, four lines. Whether you have four items or four million, the code stays the same."
+ },
+ {
+  "i": 9,
+  "id": "funcs",
+  "start": 130.668,
+  "speechStart": 130.668,
+  "speechEnd": 142.956,
+  "end": 143.656,
+  "say": "A function is a reusable recipe. You define it once with the word def, give it an input, and it returns a result. Call greet with Ori, and you get back: Hi, Ori!",
+  "caption": "A function is a reusable recipe. You define it once with the word def, give it an input, and it returns a result. Call greet with Ori, and you get back: Hi, Ori!"
+ },
+ {
+  "i": 10,
+  "id": "dicts",
+  "start": 143.656,
+  "speechStart": 143.656,
+  "speechEnd": 153.016,
+  "end": 153.716,
+  "say": "A dictionary connects keys to values, just like a phone book. Ask for Dana, and you get her number instantly, without searching the whole list.",
+  "caption": "A dictionary connects keys to values, just like a phone book. Ask for Dana, and you get her number instantly, without searching the whole list."
+ },
+ {
+  "i": 11,
+  "id": "libs",
+  "start": 153.716,
+  "speechStart": 153.716,
+  "speechEnd": 171.692,
+  "end": 172.392,
+  "say": "Python's real superpower is its libraries: ready-made code written by others. Type import, and you get new abilities. Here, the random library picks a random fruit for us. There are hundreds of thousands of free libraries, for websites, games, data and A.I.",
+  "caption": "Python's real superpower is its libraries: ready-made code written by others. Type import, and you get new abilities. Here, the random library picks a random fruit for us. There are hundreds of thousands of free libraries, for websites, games, data and AI."
+ },
+ {
+  "i": 12,
+  "id": "runs",
+  "start": 172.392,
+  "speechStart": 172.392,
+  "speechEnd": 186.264,
+  "end": 186.964,
+  "say": "How does it run? A program called the interpreter reads your code line by line, and tells the computer what to do. That makes Python a bit slower than languages like C, but much faster to write, and much easier to read.",
+  "caption": "How does it run? A program called the interpreter reads your code line by line, and tells the computer what to do. That makes Python a bit slower than languages like C, but much faster to write, and much easier to read."
+ },
+ {
+  "i": 13,
+  "id": "outro",
+  "start": 186.964,
+  "speechStart": 186.964,
+  "speechEnd": 200.092,
+  "end": 202.392,
+  "say": "So that's Python: variables, lists, decisions, loops, functions and libraries. Want to try? Go to python dot org, install it for free, and start with one line: print hello world.",
+  "caption": "So that's Python: variables, lists, decisions, loops, functions and libraries. Want to try? Go to python.org, install it for free, and start with one line: print(\"Hello, world!\")"
+ }
+]
