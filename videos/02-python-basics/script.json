@@ -1,0 +1,27 @@
+{
+  "title": "What is Python?",
+  "lang": "en",
+  "voice": "en-male",
+  "rate": "+0%",
+  "subtitles": true,
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "pause": 0.7,
+  "scenes": [
+    { "id": "intro", "say": "What is Python? And why is it the most popular programming language in the world? Let's learn the basics, with real code.", "min": 6 },
+    { "id": "what", "say": "Python is a programming language: a way to give instructions to a computer. It was created by Guido van Rossum, and released in 1991. And the name? It doesn't come from the snake. It comes from Monty Python, a British comedy show." },
+    { "id": "where", "say": "You use Python every day without knowing it. It runs parts of Instagram, Netflix and Spotify. Scientists use it to analyze data, and almost every modern A.I. tool is built with it.", "caption": "You use Python every day without knowing it. It runs parts of Instagram, Netflix and Spotify. Scientists use it to analyze data, and almost every modern AI tool is built with it." },
+    { "id": "hello", "say": "Here is your first program. Just one line: print, and some text in quotes. Run it, and the computer prints: Hello, world! In many other languages, this takes five or ten lines." },
+    { "id": "vars", "say": "A variable is like a labeled box that holds a value. Here, the box called name holds the text Ori, and the box called age holds the number 30. Later, we can use the box by its name." },
+    { "id": "types", "say": "Every value has a type. Whole numbers are called int. Numbers with a decimal point are float. Text is called a string, and True or False is a boolean." },
+    { "id": "lists", "say": "A list holds many values in order, inside square brackets. Append adds a new item to the end. And here's a surprise: counting starts at zero, so fruits zero is the first item, apple." },
+    { "id": "ifs", "say": "With if, the program makes decisions. If age is eighteen or more, print adult. Otherwise, print kid. Notice the spaces at the start of the lines. In Python, this indentation is not just style. It tells Python which lines belong to the if." },
+    { "id": "loops", "say": "A for loop repeats an action for every item. For each fruit in the list, print it. Four items, four lines. Whether you have four items or four million, the code stays the same." },
+    { "id": "funcs", "say": "A function is a reusable recipe. You define it once with the word def, give it an input, and it returns a result. Call greet with Ori, and you get back: Hi, Ori!" },
+    { "id": "dicts", "say": "A dictionary connects keys to values, just like a phone book. Ask for Dana, and you get her number instantly, without searching the whole list." },
+    { "id": "libs", "say": "Python's real superpower is its libraries: ready-made code written by others. Type import, and you get new abilities. Here, the random library picks a random fruit for us. There are hundreds of thousands of free libraries, for websites, games, data and A.I.", "caption": "Python's real superpower is its libraries: ready-made code written by others. Type import, and you get new abilities. Here, the random library picks a random fruit for us. There are hundreds of thousands of free libraries, for websites, games, data and AI." },
+    { "id": "runs", "say": "How does it run? A program called the interpreter reads your code line by line, and tells the computer what to do. That makes Python a bit slower than languages like C, but much faster to write, and much easier to read." },
+    { "id": "outro", "say": "So that's Python: variables, lists, decisions, loops, functions and libraries. Want to try? Go to python dot org, install it for free, and start with one line: print hello world.", "caption": "So that's Python: variables, lists, decisions, loops, functions and libraries. Want to try? Go to python.org, install it for free, and start with one line: print(\"Hello, world!\")", "pause": 1.5 }
+  ]
+}

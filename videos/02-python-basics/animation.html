@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../factory/frame.css">
+<style>
+  body { background: linear-gradient(170deg, #eef2ff 0%, #f6f1ff 55%, #fff4ec 100%); }
+  .slide { position: absolute; inset: 0; opacity: 0; }
+  .mono, .code, .term { font-family: "DejaVu Sans Mono", "Liberation Mono", monospace; }
+
+  /* כותרת עליונה */
+  .hdr { position: absolute; top: 34px; left: 24px; right: 24px; }
+  .hdr .kick { font-size: 14px; font-weight: 700; letter-spacing: 3px; color: #7b83b5; }
+  .hdr .kick b { display: inline-block; background: #5b6cff; color: #fff; border-radius: 10px;
+                 padding: 2px 9px; margin-right: 8px; letter-spacing: 1px; }
+  .hdr h1 { font-size: 36px; font-weight: 800; color: #1f2a44; margin-top: 6px; line-height: 1.1; }
+
+  .stack { position: absolute; top: 150px; left: 24px; right: 24px;
+           display: flex; flex-direction: column; gap: 14px; }
+
+  /* עורך קוד */
+  .editor { background: #1d2033; border-radius: 22px; overflow: hidden;
+            box-shadow: 0 16px 34px rgba(31, 42, 68, .25); }
+  .editor .bar { height: 36px; background: #262a41; display: flex; align-items: center; padding: 0 16px; gap: 7px; }
+  .editor .bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .editor .bar span { margin-left: 10px; color: #8f96bd; font-size: 14px; font-weight: 600; }
+  .code { color: #e6e9f5; font-size: 18px; line-height: 1.6; padding: 14px 16px 16px;
+          white-space: pre; position: relative; }
+  .code .ln { display: block; border-radius: 8px; padding: 0 6px; margin: 0 -6px; }
+  .code .ln.hl { background: rgba(91, 108, 255, .28); }
+  .tk-kw { color: #ff8fd0; } .tk-str { color: #a6e3a1; } .tk-num { color: #fab387; }
+  .tk-bi { color: #89b4fa; } .tk-fn { color: #f9e2af; } .tk-com { color: #7f88b0; }
+  .tk-bool { color: #fab387; font-weight: 700; } .tk-op { color: #94e2d5; }
+  .cur { display: inline-block; width: 10px; height: 22px; background: #ffd166;
+         vertical-align: -4px; margin-left: 1px; border-radius: 2px; }
+  .ind { background: rgba(255, 209, 102, var(--g, 0)); border-radius: 5px;
+         box-shadow: 0 0 0 2px rgba(255, 209, 102, calc(var(--g, 0) * 1.4)); }
+
+  /* מסוף פלט */
+  .term { background: #0f1222; border-radius: 18px; padding: 10px 16px 12px; color: #c8f7c5;
+          font-size: 18px; line-height: 1.55; box-shadow: 0 12px 26px rgba(31, 42, 68, .2); }
+  .term .tl { font-family: "Rubik", sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 2px;
+              color: #6c7499; margin-bottom: 2px; }
+  .term .row { white-space: pre; }
+  .term .row::before { content: "› "; color: #5b6cff; }
+
+  .card { background: #fff; border-radius: 22px; box-shadow: 0 12px 28px rgba(31, 42, 68, .13); }
+  .chip { display: inline-block; border-radius: 14px; padding: 6px 12px; font-weight: 700; }
+  .center { text-align: center; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="../../factory/frame.js"></script>
+<script>
+const { clamp, lerp, ease, span, $ } = H;
+
+/* ---------- צביעת תחביר ---------- */
+const KW = new Set(["def", "return", "if", "else", "elif", "for", "in", "import", "while", "and", "or", "not", "from"]);
+const BI = new Set(["print", "len", "range", "input"]);
+function tokenize(line) {
+  const out = [];
+  const re = /(#.*$)|("[^"]*"?|'[^']*'?)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_]\w*)|(\s+)|([=+\-*/<>!]=?|[()\[\]{}.,:])/g;
+  let m;
+  while ((m = re.exec(line))) {
+    let c = "";
+    if (m[1]) c = "com";
+    else if (m[2]) c = "str";
+    else if (m[3]) c = "num";
+    else if (m[4]) {
+      const w = m[4];
+      if (w === "True" || w === "False" || w === "None") c = "bool";
+      else if (KW.has(w)) c = "kw";
+      else if (BI.has(w)) c = "bi";
+      else if (line[re.lastIndex] === "(") c = "fn";
+    } else if (m[6]) c = "op";
+    out.push({ s: m[0], c });
+  }
+  return out;
+}
+const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// מצייר שורת קוד עד n תווים
+function lineHTML(tokens, n, glow) {
+  let html = "", left = n, first = true;
+  for (const tk of tokens) {
+    if (left <= 0) break;
+    const s = tk.s.slice(0, left);
+    left -= s.length;
+    if (first && /^\s+$/.test(tk.s) && glow > 0) html += `<span class="ind" style="--g:${(glow * 0.45).toFixed(3)}">${s}</span>`;
+    else html += tk.c ? `<span class="tk-${tk.c}">${esc(s)}</span>` : esc(s);
+    first = false;
+  }
+  return html;
+}
+
+function editorHTML(file, id) {
+  return `<div class="editor"><div class="bar"><i style="background:#ff6b6b"></i><i style="background:#ffd166"></i><i style="background:#2fbf71"></i><span>${file}</span></div><div class="code" id="${id}"></div></div>`;
+}
+function termHTML(id, rows) {
+  return `<div class="term"><div class="tl">OUTPUT</div><div id="${id}" style="min-height:${rows * 28}px"></div></div>`;
+}
+
+/* ---------- תזמון לפי הקריינות ---------- */
+// זמן (שניות מוחלטות) שבו המשפט נאמר — הערכה לפי מיקום המילים בטקסט
+function at(sc, phrase) {
+  if (typeof phrase === "number") return sc.speechStart + phrase;
+  const i = sc.say.indexOf(phrase);
+  const k = i < 0 ? 0 : i / sc.say.length;
+  return sc.speechStart + k * (sc.speechEnd - sc.speechStart);
+}
+
+// הקלדת קוד: כל שורה מתחילה בזמן שלה (או אחרי הקודמת)
+function drawCode(el, sc, t, lines, opt = {}) {
+  const cps = opt.cps || 26;
+  if (!lines._tk) lines._tk = lines.map((l) => tokenize(l.text));
+  let prevEnd = -1e9, html = "", curDone = false;
+  const typed = [];
+  lines.forEach((l, i) => {
+    const st = Math.max(l.at === undefined ? prevEnd : at(sc, l.at), prevEnd);
+    const n = clamp(Math.floor((t - st) * cps), 0, l.text.length);
+    prevEnd = st + l.text.length / cps + 0.12;
+    typed.push(n);
+  });
+  // השורה האחרונה שהתחילה להיות מוקלדת
+  let last = -1;
+  typed.forEach((n, i) => { if (n > 0 || (lines[i].text === "" && i > 0 && typed[i - 1] === lines[i - 1].text.length)) last = i; });
+  lines.forEach((l, i) => {
+    const glow = opt.glow ? opt.glow(i) : 0;
+    let inner = lineHTML(lines._tk[i], typed[i], glow);
+    if (i === last && !opt.noCursor && Math.floor(t * 2.2) % 2 === 0) inner += `<span class="cur"></span>`;
+    const hl = opt.hl !== undefined && opt.hl === i ? " hl" : "";
+    html += `<span class="ln${hl}">${inner || " "}</span>`;
+  });
+  el.innerHTML = html;
+}
+
+function drawTerm(el, sc, t, rows) {
+  let html = "";
+  for (const r of rows) {
+    const st = typeof r.t === "number" && r.abs ? r.t : at(sc, r.at);
+    if (t >= st) html += `<div class="row" style="opacity:${clamp((t - st) / 0.25)}">${esc(r.text)}</div>`;
+  }
+  el.innerHTML = html;
+}
+
+const ap = (sc, t, phrase, d = 0.5) => ease(clamp((t - at(sc, phrase)) / d));
+const pop = (el, k, dy = 18) => {
+  el.style.opacity = k;
+  el.style.transform = `translateY(${(1 - k) * dy}px) scale(${0.94 + 0.06 * k})`;
+};
+
+function header(n, title) {
+  return `<div class="hdr"><div class="kick"><b>${n}</b>PYTHON BASICS</div><h1>${title}</h1></div>`;
+}
+
+/* ---------- נחש מצויר (עיצוב מקורי) ---------- */
+function snakePath(t, x0, x1, y, amp, wl) {
+  let d = "";
+  for (let x = x0; x <= x1; x += 6) {
+    const yy = y + amp * Math.sin((x - x0) / wl - t * 2.4) * (0.35 + 0.65 * (x - x0) / (x1 - x0));
+    d += (d ? " L" : "M") + x.toFixed(1) + " " + yy.toFixed(1);
+  }
+  return d;
+}
+function drawSnake(id, t, x0, x1, y, amp, wl, scale) {
+  const g = $(id);
+  const yh = y + amp * Math.sin((x1 - x0) / wl - t * 2.4);
+  const slope = amp * Math.cos((x1 - x0) / wl - t * 2.4) / wl;
+  const ang = Math.atan(slope) * 180 / Math.PI;
+  g.querySelector(".body").setAttribute("d", snakePath(t, x0, x1, y, amp, wl));
+  g.querySelector(".dots").setAttribute("d", snakePath(t, x0, x1, y, amp, wl));
+  const head = g.querySelector(".head");
+  head.setAttribute("transform", `translate(${x1} ${yh}) rotate(${ang}) scale(${scale})`);
+  const flick = (t % 2.6) < 0.5 ? Math.sin((t % 2.6) / 0.5 * Math.PI) : 0;
+  g.querySelector(".tongue").setAttribute("transform", `scale(${0.2 + 0.8 * flick} 1)`);
+  const blink = (t % 3.7) < 0.14 ? 0.15 : 1;
+  g.querySelectorAll(".eye").forEach((e) => e.setAttribute("transform", `scale(1 ${blink})`));
+}
+function snakeSVG(id, w, h, sw) {
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:visible"><g id="${id}">
+    <path class="body" fill="none" stroke="url(#snk)" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="dots" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="${sw * 0.18}" stroke-linecap="round" stroke-dasharray="0 ${sw * 0.9}"/>
+    <g class="head">
+      <g class="tongue"><path d="M28 0 L56 0 L64 -7 M56 0 L64 7" stroke="#ff6b6b" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+      <ellipse cx="6" cy="0" rx="34" ry="27" fill="#27a862"/>
+      <ellipse cx="2" cy="-4" rx="30" ry="20" fill="#3fcf7f"/>
+      <g transform="translate(8 -13)"><circle r="9" fill="#fff"/><g class="eye"><circle cx="2" cy="0" r="5" fill="#1f2a44"/></g></g>
+      <g transform="translate(8 13)"><circle r="9" fill="#fff"/><g class="eye"><circle cx="2" cy="0" r="5" fill="#1f2a44"/></g></g>
+      <ellipse cx="-6" cy="-12" rx="6" ry="3" fill="#ff9aa2" opacity=".0"/>
+    </g></g></svg>`;
+}
+
+/* ---------- אייקונים קטנים ---------- */
+const ICON = {
+  camera: `<rect x="6" y="12" width="36" height="28" rx="9" fill="none" stroke="#fff" stroke-width="4"/><circle cx="24" cy="26" r="7" fill="none" stroke="#fff" stroke-width="4"/><circle cx="35" cy="18" r="2.4" fill="#fff"/>`,
+  play: `<rect x="6" y="10" width="36" height="28" rx="9" fill="none" stroke="#fff" stroke-width="4"/><path d="M20 17 L31 24 L20 31 Z" fill="#fff"/>`,
+  music: `<path d="M18 34 V12 L36 8 V30" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/><circle cx="14" cy="35" r="5" fill="#fff"/><circle cx="32" cy="31" r="5" fill="#fff"/>`,
+  chart: `<rect x="8" y="26" width="7" height="14" rx="3" fill="#fff"/><rect x="20" y="16" width="7" height="24" rx="3" fill="#fff"/><rect x="32" y="8" width="7" height="32" rx="3" fill="#fff"/>`,
+  ai: `<path d="M24 4 C26 16 30 20 42 22 C30 24 26 28 24 40 C22 28 18 24 6 22 C18 20 22 16 24 4 Z" fill="#fff"/><circle cx="38" cy="8" r="3" fill="#fff"/>`,
+  more: `<circle cx="12" cy="24" r="4.5" fill="#fff"/><circle cx="24" cy="24" r="4.5" fill="#fff"/><circle cx="36" cy="24" r="4.5" fill="#fff"/>`,
+};
+const icon = (k, s = 48) => `<svg width="${s}" height="${s}" viewBox="0 0 48 48">${ICON[k]}</svg>`;
+
+/* ---------- סצנות ---------- */
+const S = {};
+
+S.intro = {
+  html: `
+    <svg width="0" height="0" style="position:absolute"><defs>
+      <linearGradient id="snk" x1="0" x2="1"><stop offset="0" stop-color="#7be3a8"/><stop offset="1" stop-color="#27a862"/></linearGradient>
+    </defs></svg>
+    <div id="introBlob" style="position:absolute;left:70px;top:190px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,#dfe4ff 0%,rgba(223,228,255,0) 70%)"></div>
+    <div style="position:absolute;left:30px;top:250px">${snakeSVG("snakeA", 480, 300, 44)}</div>
+    <div id="iTitle" class="center" style="position:absolute;top:600px;left:0;right:0">
+      <div style="font-size:50px;font-weight:900;color:#1f2a44;line-height:1">What is <span style="color:#2fa866">Python</span>?</div>
+      <div id="iBar" style="height:8px;width:140px;margin:18px auto 0;border-radius:4px;background:#ffd166"></div>
+      <div id="iSub" style="font-size:22px;font-weight:600;color:#5b6390;margin-top:16px">The basics, with real code</div>
+    </div>
+    ${["print()", "for", "def", "[ ]", "if", "import"].map((c, i) => `<div class="chip mono fl" style="position:absolute;background:#fff;color:#5b6cff;box-shadow:0 8px 20px rgba(31,42,68,.12);font-size:18px">${c}</div>`).join("")}
+  `,
+  draw(sc, t, local) {
+    drawSnake("snakeA", t, 40, 400, 150, 46, 62, 1.15);
+    const k = ease(clamp(local / 0.9));
+    pop($("iTitle"), k, 30);
+    $("iBar").style.width = 140 * ease(span(local, 0.5, 1.5)) + "px";
+    $("iSub").style.opacity = ease(span(local, 0.9, 1.7));
+    const pos = [[40, 160], [380, 150], [430, 470], [30, 500], [250, 120], [210, 540]];
+    document.querySelectorAll(".fl").forEach((el, i) => {
+      const kk = ease(span(local, 0.3 + i * 0.25, 0.9 + i * 0.25));
+      const [x, y] = pos[i];
+      el.style.left = x + "px";
+      el.style.top = y + 8 * Math.sin(t * 1.6 + i * 1.3) + "px";
+      el.style.opacity = kk;
+      el.style.transform = `scale(${0.6 + 0.4 * kk}) rotate(${(i % 2 ? 1 : -1) * 6}deg)`;
+    });
+  },
+};
+
+S.what = {
+  html: `${header("1", "What is it?")}
+    <div class="stack" style="gap:18px;top:170px">
+      <div class="card" id="w1" style="display:flex;gap:18px;align-items:center;padding:22px">
+        <div style="width:92px;height:92px;border-radius:24px;background:#5b6cff;color:#fff;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800" class="mono">&lt;/&gt;</div>
+        <div><div style="font-size:26px;font-weight:800">A programming language</div><div style="font-size:19px;color:#5b6390;margin-top:4px">Instructions for a computer, written in words</div></div>
+      </div>
+      <div class="card" id="w2" style="display:flex;gap:18px;align-items:center;padding:22px">
+        <div style="width:92px;height:92px;border-radius:24px;background:#ffb020;color:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:900">1991</div>
+        <div><div style="font-size:26px;font-weight:800">Guido van Rossum</div><div style="font-size:19px;color:#5b6390;margin-top:4px">Created it, released in 1991</div></div>
+      </div>
+      <div class="card" id="w3" style="display:flex;gap:18px;align-items:center;padding:22px">
+        <div style="width:92px;height:92px;border-radius:24px;background:#ff6b6b;position:relative;display:flex;align-items:center;justify-content:center">
+          <svg width="70" height="70" viewBox="0 0 70 70"><rect x="6" y="14" width="58" height="40" rx="10" fill="none" stroke="#fff" stroke-width="5"/><path d="M24 62 h22" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M26 26 c4 6 14 6 18 0 M26 40 c6 6 12 6 18 0" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div><div style="font-size:26px;font-weight:800">Named after a comedy</div><div style="font-size:19px;color:#5b6390;margin-top:4px">Monty Python, a British TV show</div></div>
+      </div>
+      <div id="w4" style="display:flex;align-items:center;justify-content:center;gap:14px;margin-top:8px">
+        <svg width="120" height="70" viewBox="0 0 120 70" style="overflow:visible"><path d="M10 40 C30 10 50 70 70 40 S100 20 104 34" stroke="#3fcf7f" stroke-width="14" fill="none" stroke-linecap="round"/><circle cx="106" cy="34" r="12" fill="#27a862"/>
+          <path id="wX" d="M20 8 L100 64 M100 8 L20 64" stroke="#ff4d4d" stroke-width="9" stroke-linecap="round"/></svg>
+        <div style="font-size:24px;font-weight:800;color:#ff4d4d">Not the snake!</div>
+      </div>
+    </div>`,
+  draw(sc, t) {
+    pop($("w1"), ap(sc, t, "a way to give", 0.6));
+    pop($("w2"), ap(sc, t, "It was created", 0.6));
+    pop($("w3"), ap(sc, t, "It comes from Monty", 0.6));
+    pop($("w4"), ap(sc, t, "It doesn't come", 0.6));
+    const x = ap(sc, t, "from the snake", 0.5);
+    $("wX").setAttribute("stroke-dasharray", "200");
+    $("wX").setAttribute("stroke-dashoffset", 200 * (1 - x));
+  },
+};
+
+S.where = {
+  html: `${header("2", "Where is it used?")}
+    <div class="stack" style="top:170px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        ${[["Instagram", "camera", "#e1306c"], ["Netflix", "play", "#e50914"], ["Spotify", "music", "#1db954"],
+           ["Science & data", "chart", "#5b6cff"], ["AI tools", "ai", "#9b5cff"], ["Much more", "more", "#ffb020"]]
+          .map(([n, ic, c], i) => `<div class="card wt" style="padding:20px;height:150px;display:flex;flex-direction:column;justify-content:space-between">
+              <div style="width:64px;height:64px;border-radius:20px;background:${c};display:flex;align-items:center;justify-content:center">${icon(ic, 46)}</div>
+              <div style="font-size:23px;font-weight:800">${n}</div></div>`).join("")}
+      </div>
+    </div>`,
+  draw(sc, t) {
+    const cues = ["Instagram", "Netflix", "Spotify", "Scientists", "almost every", "built with"];
+    document.querySelectorAll(".wt").forEach((el, i) => pop(el, ap(sc, t, cues[i], 0.5)));
+  },
+};
+
+S.hello = {
+  lines: [{ text: 'print("Hello, world!")', at: "Just one line" }],
+  html: `${header("3", "Your first program")}
+    <div class="stack">
+      ${editorHTML("hello.py", "hCode")}
+      ${termHTML("hTerm", 1)}
+      <div class="card" id="hCmp" style="padding:20px 22px;margin-top:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:20px;font-weight:800;color:#2fa866">Python</div><div style="font-size:16px;color:#5b6390;font-weight:700">1 line</div></div>
+        <div style="height:14px;width:62%;background:#2fbf71;border-radius:7px;margin:10px 0 18px"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:20px;font-weight:800;color:#8a90b2">Many other languages</div><div style="font-size:16px;color:#5b6390;font-weight:700">5–10 lines</div></div>
+        <div id="hBars" style="margin-top:10px"></div>
+      </div>
+    </div>`,
+  draw(sc, t) {
+    drawCode($("hCode"), sc, t, this.lines, { cps: 18 });
+    drawTerm($("hTerm"), sc, t, [{ text: "Hello, world!", at: "Hello, world" }]);
+    const k = ap(sc, t, "In many other", 0.5);
+    pop($("hCmp"), k);
+    const w = [40, 70, 55, 82, 34, 60, 26];
+    let h = "";
+    w.forEach((x, i) => {
+      const kk = ease(clamp((t - at(sc, "In many other") - 0.3 - i * 0.18) / 0.3));
+      h += `<div style="height:9px;width:${x * kk}%;background:#c9cee6;border-radius:5px;margin-bottom:6px"></div>`;
+    });
+    $("hBars").innerHTML = h;
+  },
+};
+
+function boxSVG(label, color) {
+  return `<div style="text-align:center">
+    <div class="vb" style="position:relative;width:180px;height:150px;margin:0 auto">
+      <svg width="180" height="150" viewBox="0 0 180 150" style="position:absolute;left:0;top:0">
+        <path d="M20 50 L160 50 L160 136 C160 142 156 146 150 146 L30 146 C24 146 20 142 20 136 Z" fill="${color}"/>
+        <path d="M20 50 L44 26 L136 26 L160 50 Z" fill="${color}" opacity=".7"/>
+        <rect x="50" y="92" width="80" height="32" rx="10" fill="#fff"/>
+        <text x="90" y="115" text-anchor="middle" font-size="20" font-weight="800" fill="#1f2a44" font-family="DejaVu Sans Mono, monospace">${label}</text>
+      </svg>
+      <div class="val mono" style="position:absolute;left:0;right:0;font-size:24px;font-weight:700;color:#1f2a44"></div>
+    </div></div>`;
+}
+
+S.vars = {
+  lines: [
+    { text: 'name = "Ori"', at: "Here, the box" },
+    { text: "age = 30", at: "and the box called age" },
+    { text: "print(name, age)", at: "Later" },
+  ],
+  html: `${header("4", "Variables")}
+    <div class="stack">
+      ${editorHTML("variables.py", "vCode")}
+      ${termHTML("vTerm", 1)}
+      <div style="display:flex;justify-content:space-around;margin-top:20px" id="vBoxes">
+        ${boxSVG("name", "#5b6cff")}${boxSVG("age", "#ffb020")}
+      </div>
+    </div>`,
+  draw(sc, t) {
+    drawCode($("vCode"), sc, t, this.lines);
+    drawTerm($("vTerm"), sc, t, [{ text: "Ori 30", at: "use the box" }]);
+    pop($("vBoxes"), ap(sc, t, "labeled box", 0.6));
+    const vals = ['"Ori"', "30"], cues = ["holds the text", "holds the number"];
+    document.querySelectorAll("#vBoxes .val").forEach((el, i) => {
+      const k = ap(sc, t, cues[i], 0.7);
+      el.textContent = vals[i];
+      el.style.top = lerp(-30, 52, k) + "px";
+      el.style.opacity = clamp(k * 3);
+      const used = ap(sc, t, "use the box", 0.3) * (1 - ap(sc, t, "by its name", 0.6));
+      el.style.transform = `scale(${1 + 0.25 * used})`;
+    });
+  },
+};
+
+S.types = {
+  lines: [
+    { text: "count = 42         # int", at: "Whole numbers" },
+    { text: "price = 9.99       # float", at: "decimal point" },
+    { text: 'city = "Haifa"     # str', at: "Text is" },
+    { text: "is_sunny = True    # bool", at: "True or False" },
+  ],
+  html: `${header("5", "Data types")}
+    <div class="stack">
+      ${editorHTML("types.py", "tCode")}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px">
+        ${[["int", "Whole numbers", "42, -7, 1000", "#ffb020"], ["float", "Decimal numbers", "9.99, 3.14", "#ff6b6b"],
+           ["str", "Text (string)", '"Haifa", "hi"', "#2fbf71"], ["bool", "True or False", "True, False", "#5b6cff"]]
+          .map(([n, d, e, c]) => `<div class="card ty" style="padding:16px 18px;border-top:8px solid ${c}">
+            <div class="mono" style="font-size:26px;font-weight:800;color:${c}">${n}</div>
+            <div style="font-size:18px;font-weight:700;margin-top:4px">${d}</div>
+            <div class="mono" style="font-size:15px;color:#5b6390;margin-top:6px">${e}</div></div>`).join("")}
+      </div>
+    </div>`,
+  draw(sc, t) {
+    const cues = ["Whole numbers", "decimal point", "Text is", "True or False"];
+    let hl = -1;
+    cues.forEach((c, i) => { if (t >= at(sc, c)) hl = i; });
+    drawCode($("tCode"), sc, t, this.lines, { hl });
+    document.querySelectorAll(".ty").forEach((el, i) => pop(el, ap(sc, t, cues[i], 0.5)));
+  },
+};
+
+function slotsHTML(id, n) {
+  let h = `<div id="${id}" style="position:relative;height:120px">`;
+  for (let i = 0; i < n; i++)
+    h += `<div class="slot" style="position:absolute;top:0;left:${i * 123}px;width:111px;height:74px;border-radius:18px;background:#fff;box-shadow:0 8px 20px rgba(31,42,68,.12);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700" ><span class="mono"></span></div>
+          <div class="idx mono" style="position:absolute;top:84px;left:${i * 123}px;width:111px;text-align:center;font-size:20px;font-weight:800;color:#8a90b2">${i}</div>`;
+  return h + `</div>`;
+}
+
+S.lists = {
+  lines: [
+    { text: 'fruits = ["apple", "banana", "cherry"]', at: "A list holds" },
+    { text: 'fruits.append("mango")', at: "Append adds" },
+    { text: "print(fruits[0])", at: "so fruits zero" },
+  ],
+  html: `${header("6", "Lists")}
+    <div class="stack">
+      ${editorHTML("lists.py", "lCode")}
+      ${termHTML("lTerm", 1)}
+      <div style="margin-top:20px">${slotsHTML("lSlots", 4)}</div>
+    </div>`,
+  draw(sc, t) {
+    drawCode($("lCode"), sc, t, this.lines, { cps: 30 });
+    drawTerm($("lTerm"), sc, t, [{ text: "apple", at: "is the first item" }]);
+    const items = ['"apple"', '"banana"', '"cherry"', '"mango"'];
+    const cues = [at(sc, "A list holds") + 0.5, at(sc, "A list holds") + 0.9, at(sc, "A list holds") + 1.3, at(sc, "Append adds") + 0.4];
+    const slots = document.querySelectorAll("#lSlots .slot");
+    const idxs = document.querySelectorAll("#lSlots .idx");
+    const zero = ap(sc, t, "counting starts", 0.4);
+    const first = ap(sc, t, "so fruits zero", 0.4);
+    slots.forEach((el, i) => {
+      const k = ease(clamp((t - cues[i]) / 0.5));
+      el.firstChild.textContent = items[i];
+      el.style.opacity = k;
+      el.style.transform = i === 3 ? `translateX(${(1 - k) * 80}px)` : `translateY(${(1 - k) * -40}px)`;
+      const g = i === 0 ? first : 0;
+      el.style.background = g > 0 ? `rgba(255,209,102,${g})` : "#fff";
+      el.style.outline = i === 3 ? `3px solid rgba(47,191,113,${k * (1 - ap(sc, t, "And here's", 0.5))})` : "none";
+      idxs[i].style.opacity = k * (0.35 + 0.65 * zero);
+      idxs[i].style.color = i === 0 && zero > 0 ? "#ff6b6b" : "#8a90b2";
+      idxs[i].style.transform = `scale(${1 + (i === 0 ? 0.5 * zero : 0)})`;
+    });
+  },
+};
+
+S.ifs = {
+  lines: [
+    { text: "age = 30", at: "With if" },
+    { text: "if age >= 18:", at: "If age is" },
+    { text: '    print("adult")' },
+    { text: "else:", at: "Otherwise" },
+    { text: '    print("kid")' },
+  ],
+  html: `${header("7", "Decisions: if / else")}
+    <div class="stack">
+      ${editorHTML("decide.py", "iCode")}
+      ${termHTML("iTerm", 1)}
+      <svg id="iTree" width="492" height="200" viewBox="0 0 492 200" style="margin-top:6px;overflow:visible">
+        <path id="iYes" d="M246 70 C246 110 120 100 120 140" stroke="#2fbf71" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <path id="iNo" d="M246 70 C246 110 372 100 372 140" stroke="#c9cee6" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <rect x="136" y="14" width="220" height="58" rx="20" fill="#5b6cff"/>
+        <text x="246" y="51" text-anchor="middle" font-size="22" font-weight="800" fill="#fff" font-family="DejaVu Sans Mono, monospace">age &gt;= 18 ?</text>
+        <text x="160" y="104" font-size="17" font-weight="800" fill="#2fbf71">yes</text>
+        <text x="312" y="104" font-size="17" font-weight="800" fill="#a0a6c6">no</text>
+        <rect id="iA" x="50" y="140" width="140" height="54" rx="18" fill="#2fbf71"/>
+        <text x="120" y="174" text-anchor="middle" font-size="21" font-weight="800" fill="#fff" font-family="DejaVu Sans Mono, monospace">adult</text>
+        <rect x="302" y="140" width="140" height="54" rx="18" fill="#e3e6f3"/>
+        <text x="372" y="174" text-anchor="middle" font-size="21" font-weight="800" fill="#8a90b2" font-family="DejaVu Sans Mono, monospace">kid</text>
+      </svg>
+    </div>`,
+  draw(sc, t) {
+    const g = ap(sc, t, "Notice the spaces", 0.5);
+    const pulse = 0.75 + 0.25 * Math.sin(t * 5);
+    drawCode($("iCode"), sc, t, this.lines, { cps: 24, glow: (i) => (i === 2 || i === 4 ? g * pulse : 0),
+      hl: t > at(sc, "If age is") && t < at(sc, "Notice") ? 1 : undefined });
+    drawTerm($("iTerm"), sc, t, [{ text: "adult", at: "print adult" }]);
+    pop($("iTree"), ap(sc, t, "makes decisions", 0.5));
+    const y = ap(sc, t, "or more", 0.6);
+    $("iYes").setAttribute("stroke-dasharray", "300");
+    $("iYes").setAttribute("stroke-dashoffset", 300 * (1 - y));
+    $("iA").setAttribute("opacity", 0.35 + 0.65 * y);
+  },
+};
+
+S.loops = {
+  lines: [
+    { text: 'fruits = ["apple", "kiwi", "fig", "mango"]', at: "A for loop" },
+    { text: "for fruit in fruits:", at: "For each" },
+    { text: "    print(fruit)" },
+  ],
+  html: `${header("8", "Loops")}
+    <div class="stack">
+      ${editorHTML("loop.py", "oCode")}
+      ${termHTML("oTerm", 4)}
+      <div style="margin-top:10px;position:relative">${slotsHTML("oSlots", 4)}
+        <div id="oPtr" style="position:absolute;top:-20px;width:111px;text-align:center"><svg width="30" height="18" viewBox="0 0 30 18"><path d="M3 2 L15 16 L27 2 Z" fill="#ff6b6b"/></svg></div>
+      </div>
+      <div id="oBig" class="center" style="font-size:24px;font-weight:800;color:#5b6cff">4 items or 4,000,000 → same 2 lines</div>
+    </div>`,
+  draw(sc, t) {
+    drawCode($("oCode"), sc, t, this.lines, { cps: 30, hl: undefined });
+    const items = ['"apple"', '"kiwi"', '"fig"', '"mango"'];
+    const t0 = at(sc, "print it") + 0.3, step = 0.75;
+    const it = Math.floor((t - t0) / step);
+    const rows = [];
+    for (let i = 0; i < 4; i++) rows.push({ text: items[i].replace(/"/g, ""), at: (t0 + i * step) - sc.speechStart });
+    drawTerm($("oTerm"), sc, t, rows);
+    const slotsK = ap(sc, t, "A for loop", 0.5);
+    document.querySelectorAll("#oSlots .slot").forEach((el, i) => {
+      el.firstChild.textContent = items[i];
+      el.style.opacity = slotsK;
+      const on = it === i;
+      el.style.background = on ? "#ffd166" : "#fff";
+      el.style.transform = `translateY(${on ? -6 : 0}px)`;
+    });
+    document.querySelectorAll("#oSlots .idx").forEach((el) => (el.style.opacity = 0));
+    const ptrOn = it >= 0 && it < 4;
+    $("oPtr").style.opacity = ptrOn ? 1 : 0;
+    const xf = clamp((t - t0) / step, 0, 3.999);
+    const ii = Math.floor(xf), fr = ease(clamp((xf - ii) / 0.3));
+    $("oPtr").style.left = (Math.max(0, ii - 1) * 123 + (ii === 0 ? 0 : 123 * fr)) + "px";
+    pop($("oBig"), ap(sc, t, "Whether you", 0.5));
+  },
+};
+
+S.funcs = {
+  lines: [
+    { text: "def greet(name):", at: "You define it" },
+    { text: '    return "Hi, " + name + "!"', at: "give it an input" },
+    { text: "" },
+    { text: 'print(greet("Ori"))', at: "Call greet" },
+  ],
+  html: `${header("9", "Functions")}
+    <div class="stack">
+      ${editorHTML("functions.py", "fCode")}
+      ${termHTML("fTerm", 1)}
+      <div id="fMach" style="position:relative;height:210px;margin-top:6px">
+        <div id="fIn" class="chip mono" style="white-space:nowrap;position:absolute;top:80px;background:#5b6cff;color:#fff;font-size:20px">"Ori"</div>
+        <div style="position:absolute;left:146px;top:30px;width:200px;height:150px;border-radius:28px;background:#1f2a44;box-shadow:0 14px 30px rgba(31,42,68,.3);display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <svg width="80" height="60" viewBox="0 0 80 60"><g id="fG1" transform="translate(28 30)"><path d="${gear(20, 8)}" fill="#ffd166"/><circle r="6" fill="#1f2a44"/></g><g id="fG2" transform="translate(58 22)"><path d="${gear(13, 6)}" fill="#ff8fd0"/><circle r="4" fill="#1f2a44"/></g></svg>
+          <div class="mono" style="color:#f9e2af;font-size:22px;font-weight:700;margin-top:6px">greet()</div>
+        </div>
+        <div id="fOut" class="chip mono" style="white-space:nowrap;position:absolute;top:80px;background:#2fbf71;color:#fff;font-size:20px">"Hi, Ori!"</div>
+      </div>
+    </div>`,
+  draw(sc, t) {
+    drawCode($("fCode"), sc, t, this.lines, { cps: 28 });
+    drawTerm($("fTerm"), sc, t, [{ text: "Hi, Ori!", at: "you get back" }]);
+    pop($("fMach"), ap(sc, t, "reusable recipe", 0.5));
+    const kin = ap(sc, t, "with Ori", 0.8);
+    $("fIn").style.left = lerp(0, 190, kin) + "px";
+    $("fIn").style.opacity = 1 - clamp((kin - 0.85) / 0.15);
+    const work = clamp((t - at(sc, "with Ori")) / 1) * (1 - clamp((t - at(sc, "you get back") - 0.6) / 0.5));
+    $("fG1").setAttribute("transform", `translate(28 30) rotate(${t * 140 * work})`);
+    $("fG2").setAttribute("transform", `translate(58 22) rotate(${-t * 220 * work})`);
+    const kout = ap(sc, t, "you get back", 0.8);
+    $("fOut").style.left = lerp(250, 356, kout) + "px";
+    $("fOut").style.opacity = clamp(kout * 3);
+    $("fOut").style.transform = `scale(${0.7 + 0.3 * kout})`;
+  },
+};
+function gear(r, n) {
+  let d = "";
+  for (let i = 0; i < n * 2; i++) {
+    const a0 = (i / (n * 2)) * Math.PI * 2, a1 = ((i + 1) / (n * 2)) * Math.PI * 2;
+    const R = i % 2 ? r * 0.78 : r;
+    d += (i ? "L" : "M") + (R * Math.cos(a0)).toFixed(1) + " " + (R * Math.sin(a0)).toFixed(1) + " L" + (R * Math.cos(a1)).toFixed(1) + " " + (R * Math.sin(a1)).toFixed(1) + " ";
+  }
+  return d + "Z";
+}
+
+S.dicts = {
+  lines: [
+    { text: 'phone = {"Dana": "050-1234567",', at: "A dictionary" },
+    { text: '         "Avi":  "052-7654321"}' },
+    { text: 'print(phone["Dana"])', at: "Ask for Dana" },
+  ],
+  html: `${header("10", "Dictionaries")}
+    <div class="stack">
+      ${editorHTML("phonebook.py", "dCode")}
+      ${termHTML("dTerm", 1)}
+      <div class="card" id="dBook" style="padding:14px 18px;margin-top:6px">
+        <div style="display:flex;font-size:14px;font-weight:800;letter-spacing:2px;color:#8a90b2;padding:4px 12px"><div style="width:45%">KEY</div><div>VALUE</div></div>
+        <div class="drow mono" style="display:flex;font-size:21px;font-weight:700;padding:12px;border-radius:14px"><div style="width:45%;color:#5b6cff">"Dana"</div><div>050-1234567</div></div>
+        <div class="drow mono" style="display:flex;font-size:21px;font-weight:700;padding:12px;border-radius:14px"><div style="width:45%;color:#5b6cff">"Avi"</div><div>052-7654321</div></div>
+      </div>
+    </div>`,
+  draw(sc, t) {
+    drawCode($("dCode"), sc, t, this.lines, { cps: 30 });
+    drawTerm($("dTerm"), sc, t, [{ text: "050-1234567", at: "her number" }]);
+    pop($("dBook"), ap(sc, t, "phone book", 0.5));
+    const k = ap(sc, t, "Ask for Dana", 0.4);
+    const rows = document.querySelectorAll(".drow");
+    rows[0].style.background = `rgba(255,209,102,${k})`;
+    rows[0].style.transform = `scale(${1 + 0.03 * k})`;
+  },
+};
+
+S.libs = {
+  lines: [
+    { text: "import random", at: "Type import" },
+    { text: "" },
+    { text: 'fruits = ["apple", "kiwi", "fig"]', at: "Here, the random" },
+    { text: "print(random.choice(fruits))" },
+  ],
+  html: `${header("11", "Libraries")}
+    <div class="stack">
+      ${editorHTML("lucky.py", "bCode")}
+      ${termHTML("bTerm", 1)}
+      <div id="bGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px"></div>
+      <div id="bCount" class="center" style="font-size:22px;font-weight:800;color:#5b6cff"></div>
+    </div>`,
+  init() {
+    const names = ["random", "math", "datetime", "json", "web", "games", "data", "AI"];
+    const cols = ["#5b6cff", "#ffb020", "#2fbf71", "#ff6b6b", "#9b5cff", "#ff8fd0", "#1fb5c9", "#1f2a44"];
+    $("bGrid").innerHTML = names.map((n, i) => `<div class="bl mono" style="height:52px;border-radius:14px;background:${cols[i]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">${n}</div>`).join("");
+  },
+  draw(sc, t) {
+    drawCode($("bCode"), sc, t, this.lines, { cps: 30 });
+    const pick = at(sc, "picks a random") + 0.4;
+    const fr = ["apple", "kiwi", "fig"];
+    const term = $("bTerm");
+    if (t < pick) term.innerHTML = "";
+    else if (t < pick + 1.3) term.innerHTML = `<div class="row" style="color:#8a90b2">${fr[Math.floor(t * 9) % 3]}</div>`;
+    else term.innerHTML = `<div class="row">kiwi</div>`;
+    const c1 = at(sc, "superpower"), c2 = at(sc, "hundreds of thousands");
+    document.querySelectorAll(".bl").forEach((el, i) => {
+      const st = i < 4 ? c1 + i * 0.35 : c2 + (i - 4) * 0.35;
+      const k = ease(clamp((t - st) / 0.4));
+      el.style.opacity = k;
+      el.style.transform = `translateY(${(1 - k) * -30}px) scale(${0.8 + 0.2 * k})`;
+      el.style.outline = i === 0 ? `4px solid rgba(255,209,102,${ap(sc, t, "Type import", 0.3) * (1 - ap(sc, t, "There are", 0.5))})` : "none";
+    });
+    const k = clamp((t - c2) / 1.6);
+    $("bCount").style.opacity = ease(clamp((t - c2) / 0.4));
+    $("bCount").textContent = Math.round(500000 * ease(k)).toLocaleString("en-US") + "+ free libraries";
+  },
+};
+
+S.runs = {
+  lines: [
+    { text: 'name = "Ori"' },
+    { text: "age = 30" },
+    { text: "print(name, age)" },
+  ],
+  html: `${header("12", "How does it run?")}
+    <div class="stack" style="gap:0">
+      ${editorHTML("my_code.py", "rCode")}
+      <div class="center" style="height:42px;position:relative"><div style="position:absolute;left:50%;top:6px;width:6px;height:30px;margin-left:-3px;background:#c9cee6;border-radius:3px"></div></div>
+      <div id="rInt" style="height:76px;border-radius:22px;background:#5b6cff;color:#fff;display:flex;align-items:center;justify-content:center;gap:14px;font-size:26px;font-weight:800;box-shadow:0 12px 26px rgba(91,108,255,.35)">
+        <svg width="44" height="44" viewBox="-22 -22 44 44"><g id="rG"><path d="${gear(19, 8)}" fill="#ffd166"/><circle r="6" fill="#5b6cff"/></g></svg>Interpreter</div>
+      <div class="center" style="height:42px;position:relative"><div style="position:absolute;left:50%;top:6px;width:6px;height:30px;margin-left:-3px;background:#c9cee6;border-radius:3px"></div></div>
+      <div style="display:flex;justify-content:center"><svg width="150" height="100" viewBox="0 0 150 100"><rect x="5" y="4" width="140" height="74" rx="14" fill="#1f2a44"/><rect id="rScr" x="15" y="14" width="120" height="54" rx="8" fill="#2fbf71"/><path d="M60 80 h30 v12 h14 v6 h-58 v-6 h14 z" fill="#1f2a44"/></svg></div>
+      <div id="rPkt" style="position:absolute;z-index:5;left:236px;width:20px;height:20px;border-radius:50%;background:#ffd166;box-shadow:0 0 16px #ffd166"></div>
+      <div class="card" id="rCmp" style="padding:14px 18px;margin-top:14px">
+        ${[["Speed to run", [["C", 92, "#8a90b2"], ["Python", 45, "#2fbf71"]]], ["Speed to write", [["C", 35, "#8a90b2"], ["Python", 92, "#2fbf71"]]]]
+          .map(([h, bars], j) => `<div style="font-size:16px;font-weight:800;color:#5b6390;margin:${j ? 10 : 0}px 0 4px">${h}</div>` +
+            bars.map(([n, v, c]) => `<div style="display:flex;align-items:center;gap:10px;margin:4px 0"><div style="width:66px;font-size:15px;font-weight:700">${n}</div><div style="flex:1;height:14px;background:#eef0f8;border-radius:7px"><div class="rb" data-v="${v}" data-g="${j}" style="height:14px;border-radius:7px;background:${c}"></div></div></div>`).join("")).join("")}
+      </div>
+    </div>`,
+  draw(sc, t) {
+    const t0 = at(sc, "line by line"), step = 0.9;
+    const ph = (t - t0) / step;
+    const active = ph >= 0 && ph < 6;
+    const ln = active ? Math.floor(ph) % 3 : undefined;
+    drawCode($("rCode"), sc, t, this.lines.map((l) => ({ text: l.text, at: -5 })), { noCursor: true, hl: ln });
+    $("rG").setAttribute("transform", `rotate(${t * (active ? 160 : 30)})`);
+    const fr = active ? ph - Math.floor(ph) : 0;
+    $("rPkt").style.top = lerp(190, 470, ease(fr)) + "px";
+    $("rPkt").style.opacity = active ? Math.sin(Math.PI * fr) : 0;
+    $("rScr").setAttribute("fill", active && fr > 0.85 ? "#7be3a8" : "#2fbf71");
+    pop($("rCmp"), ap(sc, t, "a bit slower", 0.5));
+    document.querySelectorAll(".rb").forEach((el) => {
+      const k = ap(sc, t, el.dataset.g === "0" ? "a bit slower" : "much faster to write", 0.8);
+      el.style.width = el.dataset.v * k + "%";
+    });
+  },
+};
+
+S.outro = {
+  lines: [{ text: 'print("Hello, world!")', at: "start with one line" }],
+  html: `${header("✓", "Your turn!")}
+    <div class="stack">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        ${["Variables", "Lists", "Decisions", "Loops", "Functions", "Libraries"].map((n) => `<div class="card ock" style="padding:14px 16px;display:flex;align-items:center;gap:12px;font-size:21px;font-weight:800">
+          <svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="15" fill="#2fbf71"/><path d="M8 15 L13 20 L22 10" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>${n}</div>`).join("")}
+      </div>
+      <div id="oUrl" class="center" style="margin-top:14px"><span class="chip" style="background:#1f2a44;color:#fff;font-size:28px;padding:12px 26px;border-radius:20px">python.org</span>
+        <div style="font-size:17px;color:#5b6390;font-weight:700;margin-top:8px">Free to download</div></div>
+      <div id="oEd" style="margin-top:8px">${editorHTML("my_first.py", "uCode")}</div>
+    </div>`,
+  draw(sc, t) {
+    const cues = ["variables", "lists", "decisions", "loops", "functions", "and libraries"];
+    document.querySelectorAll(".ock").forEach((el, i) => pop(el, ap(sc, t, cues[i], 0.4)));
+    pop($("oUrl"), ap(sc, t, "Go to python", 0.5));
+    pop($("oEd"), ap(sc, t, "start with", 0.5));
+    drawCode($("uCode"), sc, t, this.lines, { cps: 16 });
+  },
+};
+
+/* ---------- מסגרת ---------- */
+window.init = function () {
+  const root = $("root");
+  for (const id in S) {
+    const d = document.createElement("div");
+    d.className = "slide";
+    d.id = "sl-" + id;
+    d.innerHTML = S[id].html;
+    root.appendChild(d);
+  }
+  for (const id in S) if (S[id].init) S[id].init();
+};
+
+window.drawScene = function (sc, p, t, info, local) {
+  for (const id in S) {
+    const el = $("sl-" + id);
+    if (id !== sc.id) { el.style.opacity = 0; continue; }
+    const k = ease(clamp(local / 0.45));
+    el.style.opacity = k;
+    el.style.transform = `translateX(${(1 - k) * 40}px)`;
+    S[id].draw(sc, t, local);
+  }
+};
+</script>
+</body>
+</html>
