@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>חיבור טיעון בפסיכומטרי</title>
+<link rel="stylesheet" href="../../factory/frame.css">
+<style>
+  :root {
+    --ink: #1f2a44; --soft: #5b6782; --paper: #fbf7ef;
+    --blue: #4c6ef5; --green: #2fb36d; --red: #ef5560; --orange: #ff9f43; --purple: #845ef7; --teal: #12b3a8;
+  }
+  body { background: var(--paper); }
+  #bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #prog { position: absolute; top: 26px; left: 28px; right: 28px; height: 6px; display: flex; gap: 5px; direction: rtl; z-index: 5; }
+  #prog i { flex: 1; border-radius: 3px; background: #e3dccd; position: relative; overflow: hidden; }
+  #prog i b { position: absolute; top: 0; bottom: 0; right: 0; background: var(--ink); border-radius: 3px; }
+
+  .scene { position: absolute; inset: 0; opacity: 0; }
+  .hdr { position: absolute; top: 58px; right: 28px; left: 28px; display: flex; align-items: center; gap: 12px; }
+  .num { min-width: 46px; height: 46px; border-radius: 16px; color: #fff; font-weight: 800; font-size: 22px;
+         display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(31,42,68,.18); }
+  .ttl { font-size: 36px; font-weight: 800; letter-spacing: -0.3px; }
+  .uline { position: absolute; top: 116px; right: 86px; height: 7px; border-radius: 4px; transform-origin: right center; }
+  .body { position: absolute; top: 160px; right: 28px; left: 28px; height: 610px; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+
+  .card { background: #fff; border-radius: 22px; padding: 16px 20px; box-shadow: 0 10px 26px rgba(31,42,68,.10); }
+  .row { display: flex; align-items: center; gap: 14px; }
+  .big { font-size: 29px; font-weight: 700; line-height: 1.3; }
+  .med { font-size: 24px; font-weight: 600; line-height: 1.35; }
+  .sm { font-size: 19px; font-weight: 500; color: var(--soft); line-height: 1.35; }
+  .ico { flex: 0 0 auto; width: 44px; height: 44px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; font-size: 22px; font-weight: 700; background: #fff; box-shadow: 0 6px 16px rgba(31,42,68,.10); }
+  .ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+</style>
+<script src="../../factory/frame.js"></script>
+</head>
+<body>
+<svg id="bg" viewBox="0 0 540 960" xmlns="http://www.w3.org/2000/svg">
+  <g id="lines" stroke="#c9dcf3" stroke-width="1.4"></g>
+  <line x1="496" y1="0" x2="496" y2="960" stroke="#f3b2b2" stroke-width="2"/>
+  <circle cx="-30" cy="980" r="190" fill="#ffe8c2" opacity=".55"/>
+  <circle cx="560" cy="-20" r="120" fill="#dfe7ff" opacity=".6"/>
+</svg>
+<div id="prog"></div>
+<div id="root"></div>
+
+<script>
+const { clamp, lerp, ease, span, $ } = H;
+const NS = "http://www.w3.org/2000/svg";
+
+// ---------- אייקונים ----------
+const ICON = {
+  check: (c = "var(--green)") => `<svg class="ico" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="${c}"/><path d="M12 23 l7 7 l13 -15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  x: (c = "var(--red)") => `<svg class="ico" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="${c}"/><path d="M14 14 L30 30 M30 14 L14 30" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>`,
+  warn: () => `<svg class="ico" viewBox="0 0 44 44"><path d="M22 4 L41 38 Q42 40 40 40 L4 40 Q2 40 3 38 Z" fill="var(--orange)" stroke="var(--orange)" stroke-width="3" stroke-linejoin="round"/><rect x="19.5" y="15" width="5" height="13" rx="2.5" fill="#fff"/><circle cx="22" cy="33" r="2.8" fill="#fff"/></svg>`,
+  n: (k, c) => `<svg class="ico" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="${c}"/><text x="22" y="30" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">${k}</text></svg>`,
+};
+
+// ---------- סצנות ----------
+// כל אלמנט עם data-at="מילה" מופיע ברגע שהקריין מגיע למילה הזו בטקסט
+const SC = {
+  intro: { color: "var(--blue)", noHdr: true, html: `
+    <div style="position:absolute;top:120px;left:0;right:0;text-align:center">
+      <div data-at="^" style="font-size:30px;font-weight:700;color:var(--soft)">מדריך מלא</div>
+      <div data-at="^" style="font-size:64px;font-weight:900;line-height:1.05;margin-top:6px">חיבור טיעון</div>
+      <div data-at="בפסיכומטרי" style="font-size:44px;font-weight:800;color:var(--blue)">בפסיכומטרי</div>
+    </div>
+    <svg id="introPaper" style="position:absolute;top:360px;left:110px;width:320px;height:360px" viewBox="0 0 320 360">
+      <rect x="20" y="14" width="280" height="330" rx="22" fill="#fff" style="filter:drop-shadow(0 12px 22px rgba(31,42,68,.16))"/>
+      <rect x="44" y="40" width="120" height="14" rx="7" fill="#4c6ef5"/>
+      <g id="iLines" stroke="#1f2a44" stroke-width="7" stroke-linecap="round" opacity=".75"></g>
+      <g id="pencil"><g transform="rotate(-35)">
+        <rect x="-9" y="-92" width="18" height="78" rx="4" fill="#ffc94d"/><rect x="-9" y="-100" width="18" height="12" rx="4" fill="#ef8fa0"/>
+        <path d="M-9 -14 L9 -14 L0 4 Z" fill="#f4d9b0"/><path d="M-3 -2 L3 -2 L0 4 Z" fill="#1f2a44"/></g></g>
+    </svg>
+    <div data-at="מההתחלה" class="chip" style="position:absolute;top:300px;left:50%;transform:translateX(-50%);white-space:nowrap">מההתחלה ועד הסוף</div>
+  `},
+
+  task: { title: "מה המשימה?", color: "var(--blue)", html: `
+    <div class="card" data-at="נושא">
+      <div class="sm" style="font-weight:700;color:var(--blue)">הנושא לחיבור</div>
+      <div class="med" style="margin-top:4px">סוגיה שנויה במחלוקת, לפעמים עם קטע קצר שמציג אותה</div>
+    </div>
+    <div class="card row" data-at="המשימה" style="background:#eef2ff">
+      ${ICON.check("var(--blue)")}<div class="big">להביע עמדה ולנמק אותה</div>
+    </div>
+    <div class="row" style="gap:16px;margin-top:6px">
+      <div class="card" data-at="שלושים" style="flex:1;text-align:center;padding:18px 10px">
+        <svg viewBox="0 0 80 80" width="78" height="78"><circle cx="40" cy="40" r="34" fill="#fff4e3" stroke="var(--orange)" stroke-width="6"/>
+          <path id="clockSweep" fill="var(--orange)" opacity=".35"/>
+          <line id="clockHand" x1="40" y1="40" x2="40" y2="14" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/><circle cx="40" cy="40" r="5" fill="var(--ink)"/></svg>
+        <div style="font-size:44px;font-weight:900;line-height:1.1"><span class="ltr">30</span></div>
+        <div class="med">דקות</div>
+      </div>
+      <div class="card" data-at="עשרים וחמש" style="flex:1;text-align:center;padding:18px 10px">
+        <svg viewBox="0 0 80 80" width="78" height="78"><rect x="14" y="6" width="52" height="68" rx="9" fill="#e9f8f0" stroke="var(--green)" stroke-width="5"/>
+          <g stroke="var(--green)" stroke-width="4" stroke-linecap="round"><line x1="24" y1="24" x2="56" y2="24"/><line x1="24" y1="36" x2="56" y2="36"/><line x1="24" y1="48" x2="56" y2="48"/><line x1="24" y1="60" x2="44" y2="60"/></g></svg>
+        <div style="font-size:44px;font-weight:900;line-height:1.1"><span class="ltr">25–50</span></div>
+        <div class="med">שורות</div>
+      </div>
+    </div>
+  `},
+
+  score: { title: "איך בודקים?", color: "var(--purple)", html: `
+    <div class="row" data-at="שני בודקים" style="justify-content:center;gap:18px">
+      <svg viewBox="0 0 120 64" width="130" height="70"><g fill="var(--purple)"><circle cx="34" cy="18" r="13"/><path d="M10 62 q0 -30 24 -30 q24 0 24 30 z"/></g><g fill="#b197fc"><circle cx="86" cy="18" r="13"/><path d="M62 62 q0 -30 24 -30 q24 0 24 30 z"/></g></svg>
+      <div class="big">שני בודקים<br><span class="sm">לכל חיבור</span></div>
+    </div>
+    <div class="row" style="gap:16px;align-items:stretch">
+      <div class="card" data-at="התוכן" style="flex:1;border-top:8px solid var(--blue)">
+        <div style="font-size:34px;font-weight:900;color:var(--blue)">תוכן</div>
+        <div class="med" data-at="ברור">• ברור</div><div class="med" data-at="משכנע">• משכנע</div><div class="med" data-at="ומאורגן">• מאורגן</div>
+      </div>
+      <div class="card" data-at="והלשון" style="flex:1;border-top:8px solid var(--teal)">
+        <div style="font-size:34px;font-weight:900;color:var(--teal)">לשון</div>
+        <div class="med" data-at="עשירה">• עשירה</div><div class="med" data-at="מדויקת">• מדויקת</div><div class="med" data-at="ותקינה">• תקינה</div>
+      </div>
+    </div>
+    <div class="card row" data-at="ציון החיבור" style="background:#f3efff">
+      ${ICON.warn()}<div class="med">הציון נכלל בציון <b>החשיבה המילולית</b></div>
+    </div>
+  `},
+
+  time: { title: "חלוקת הזמן", color: "var(--orange)", html: `
+    <div class="card" style="padding:22px 18px">
+      <div style="display:flex;height:74px;border-radius:18px;overflow:hidden;background:#f1ece2">
+        <div style="flex:5;position:relative"><div data-grow="חמש דקות לתכנון" style="position:absolute;inset:0;background:var(--blue)"></div></div>
+        <div style="flex:20;position:relative;border-right:3px solid #fff;border-left:3px solid #fff"><div data-grow="עשרים דקות" style="position:absolute;inset:0;background:var(--green)"></div></div>
+        <div style="flex:5;position:relative"><div data-grow="וחמש דקות" style="position:absolute;inset:0;background:var(--orange)"></div></div>
+      </div>
+      <div style="display:flex;margin-top:12px;text-align:center">
+        <div style="flex:5" data-at="חמש דקות לתכנון"><div style="font-size:30px;font-weight:900;color:var(--blue)">5</div><div class="sm" style="font-weight:700">תכנון</div></div>
+        <div style="flex:20" data-at="עשרים דקות"><div style="font-size:30px;font-weight:900;color:var(--green)">20</div><div class="sm" style="font-weight:700">כתיבה</div></div>
+        <div style="flex:5" data-at="וחמש דקות"><div style="font-size:30px;font-weight:900;color:var(--orange)">5</div><div class="sm" style="font-weight:700">בדיקה</div></div>
+      </div>
+    </div>
+    <div class="card row" data-at="אל תדלגו" style="background:#fff4e3">${ICON.warn()}<div class="big">לא מדלגים על התכנון!</div></div>
+    <div class="card" data-at="רשימה קצרה" style="transform:rotate(-1.5deg)">
+      <div class="sm" style="font-weight:700;color:var(--orange)">טיוטה</div>
+      <div class="med" data-at="טיעונים">✎ טיעון 1, טיעון 2, טיעון 3</div>
+      <div class="med" data-at="ודוגמאות">✎ דוגמה לכל טיעון</div>
+      <div class="med" data-at="חוסכת">✎ עמדה בשורה אחת</div>
+    </div>
+  `},
+
+  structure: { title: "מבנה החיבור", color: "var(--green)", html: `
+    <div class="card" style="padding:22px 22px;display:flex;flex-direction:column;gap:12px">
+      <div data-at="פתיחה" style="border-radius:16px;background:#eef2ff;padding:12px 16px;border-right:8px solid var(--blue)">
+        <div class="big" style="color:var(--blue)">פתיחה</div><div class="sm" data-at="בפתיחה">הסוגיה + העמדה שלי</div></div>
+      <div data-at="גוף" style="border-radius:16px;background:#e9f8f0;padding:12px 16px;border-right:8px solid var(--green)">
+        <div class="big" style="color:var(--green)">גוף</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+          <div class="med" data-at="פסקה נפרדת" style="background:#fff;border-radius:12px;padding:6px 12px">¶ טיעון ראשון</div>
+          <div class="med" data-at="לכל טיעון" style="background:#fff;border-radius:12px;padding:6px 12px">¶ טיעון שני</div>
+          <div class="med" data-at="ובסיכום" style="background:#fff;border-radius:12px;padding:6px 12px">¶ טיעון שלישי</div>
+        </div></div>
+      <div data-at="וסיכום" style="border-radius:16px;background:#fff4e3;padding:12px 16px;border-right:8px solid var(--orange)">
+        <div class="big" style="color:var(--orange)">סיכום</div><div class="sm" data-at="חוזרים">העמדה שוב, במילים אחרות</div></div>
+    </div>
+  `},
+
+  paragraph: { title: "בניית פסקה", color: "var(--teal)", html: `
+    <div class="card row" data-at="טענה">${ICON.n(1, "var(--blue)")}<div><div class="big">טענה</div><div class="sm">מה אני טוען?</div></div></div>
+    <div class="card row" data-at="הסבר">${ICON.n(2, "var(--purple)")}<div><div class="big">הסבר</div><div class="sm">למה זה נכון?</div></div></div>
+    <div class="card row" data-at="ודוגמה">${ICON.n(3, "var(--teal)")}<div><div class="big">דוגמה</div><div class="sm">איפה רואים את זה במציאות?</div></div></div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+      <span class="chip" data-at="ההיסטוריה">היסטוריה</span><span class="chip" data-at="מהמדע">מדע</span>
+      <span class="chip" data-at="מהחדשות">חדשות</span><span class="chip" data-at="מהניסיון">ניסיון אישי</span>
+    </div>
+    <div class="card row" data-at="רק אל" style="background:#fff0f0">${ICON.x()}<div class="med">דוגמה בלי הסבר לא מוכיחה כלום</div></div>
+  `},
+
+  counter: { title: "הצד השני", color: "var(--purple)", html: `
+    <svg id="scaleSvg" viewBox="0 0 484 330" width="484" height="330">
+      <rect x="232" y="70" width="20" height="220" rx="10" fill="#c8bfe8"/>
+      <rect x="170" y="284" width="144" height="22" rx="11" fill="#c8bfe8"/>
+      <g id="beam"><rect x="62" y="62" width="360" height="16" rx="8" fill="var(--purple)"/></g>
+      <circle cx="242" cy="70" r="14" fill="var(--purple)"/>
+      <g id="panR"><line x1="0" y1="0" x2="-44" y2="80" stroke="#b197fc" stroke-width="3"/><line x1="0" y1="0" x2="44" y2="80" stroke="#b197fc" stroke-width="3"/>
+        <path d="M-70 80 h140 a70 30 0 0 1 -140 0 z" fill="#e5dbff"/><text y="104" text-anchor="middle" font-size="22" font-weight="800" fill="#1f2a44">העמדה שלי</text></g>
+      <g id="panL"><line x1="0" y1="0" x2="-44" y2="80" stroke="#b197fc" stroke-width="3"/><line x1="0" y1="0" x2="44" y2="80" stroke="#b197fc" stroke-width="3"/>
+        <path d="M-70 80 h140 a70 30 0 0 1 -140 0 z" fill="#f1ece2"/><text y="104" text-anchor="middle" font-size="22" font-weight="800" fill="#5b6782">הצד השני</text></g>
+    </svg>
+    <div class="card row" data-at="הציגו">${ICON.n(1, "var(--purple)")}<div class="med">מציגים את הטענה הנגדית החזקה ביותר</div></div>
+    <div class="card row" data-at="והסבירו">${ICON.n(2, "var(--purple)")}<div class="med">מסבירים למה העמדה שלי עדיפה</div></div>
+  `},
+
+  register: { title: "משלב לשוני", color: "var(--teal)", html: `
+    <div class="card row" data-at="כתבו בעברית" style="background:#e6f8f6">${ICON.check("var(--teal)")}<div class="big">עברית תקנית ורהוטה</div></div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <span class="chip" data-at="סלנג" style="color:var(--red)">✕ סלנג</span>
+      <span class="chip" data-at="קיצורים" style="color:var(--red)">✕ קיצורים</span>
+      <span class="chip" data-at="אימוג" style="color:var(--red)">✕ אימוג'ים</span>
+    </div>
+    <div class="card" data-at="למשל" style="position:relative">
+      <div class="sm" style="font-weight:700">במקום:</div>
+      <div style="position:relative;display:inline-block">
+        <div style="font-size:30px;font-weight:700;color:var(--soft)">"זה ממש לא בסדר"</div>
+        <div id="strike" style="position:absolute;right:-4px;top:52%;height:5px;border-radius:3px;background:var(--red);transform-origin:right center"></div>
+      </div>
+    </div>
+    <div class="card" data-at="כתבו: מדובר" style="border:3px solid var(--green)">
+      <div class="sm" style="font-weight:700;color:var(--green)">כותבים:</div>
+      <div style="font-size:30px;font-weight:800">"מדובר בתופעה פסולה"</div>
+    </div>
+  `},
+
+  connectors: { title: "מילות קישור", color: "var(--blue)", html: `
+    <div class="sm" data-at="^" style="font-size:22px;text-align:center">הדבק שמחזיק את הטיעון</div>
+    <div id="conn" style="display:flex;flex-direction:column;gap:12px;align-items:stretch"></div>
+    <div class="card row" data-at="הן הופכות" style="background:#eef2ff">${ICON.check("var(--blue)")}<div class="med">רשימת רעיונות ← טיעון אחד זורם</div></div>
+  `},
+
+  allowed: { title: "מה לגיטימי?", color: "var(--green)", html: `
+    <div class="card row" data-at="כל עמדה">${ICON.check()}<div><div class="big">כל עמדה שתבחרו</div><div class="sm" data-at="עמדת ביניים">גם עמדת ביניים, כל עוד היא ברורה</div></div></div>
+    <div class="card row" data-at="בגוף ראשון">${ICON.check()}<div><div class="big">כתיבה בגוף ראשון</div><div class="sm">"לדעתי...", "אני סבור ש..."</div></div></div>
+    <div class="card row" data-at="דוגמאות מהחיים">${ICON.check()}<div><div class="big">דוגמאות מהחיים שלכם</div><div class="sm">ניסיון אישי הוא דוגמה לגיטימית</div></div></div>
+  `},
+
+  forbidden: { title: "מה אסור?", color: "var(--red)", html: `
+    <div class="card row" data-at="לסטות">${ICON.x()}<div class="big">לסטות מהנושא</div></div>
+    <div class="card row" data-at="להעתיק">${ICON.x()}<div class="big">להעתיק את נוסח המשימה</div></div>
+    <div class="card row" data-at="בשפה אחרת">${ICON.x()}<div class="big">לכתוב בשפה אחרת</div></div>
+    <div class="card row" data-at="מחוץ">${ICON.x()}<div><div class="big">לכתוב מחוץ למקום המיועד</div><div class="sm" data-at="לא נבדק">מה שנכתב שם לא נבדק</div></div></div>
+  `},
+
+  mistakes: { title: "טעויות נפוצות", color: "var(--orange)", html: `
+    <div class="card row" data-at="לא לנקוט">${ICON.warn()}<div class="big">אין עמדה ברורה</div></div>
+    <div class="card row" data-at="לחזור">${ICON.warn()}<div class="big">אותו רעיון שוב ושוב</div></div>
+    <div class="card row" data-at="קצר מדי">${ICON.warn()}<div class="big">חיבור קצר מדי</div></div>
+    <div class="card row" data-at="להתעכב">${ICON.warn()}<div><div class="big">פתיחה ארוכה מדי</div><div class="sm" data-at="לסיכום">ואין זמן לסיכום</div></div></div>
+  `},
+
+  review: { title: "בדיקה אחרונה", color: "var(--blue)", html: `
+    <svg viewBox="0 0 484 190" width="484" height="190" data-at="^">
+      <rect x="40" y="6" width="404" height="176" rx="20" fill="#fff" style="filter:drop-shadow(0 10px 18px rgba(31,42,68,.12))"/>
+      <g stroke="#1f2a44" stroke-width="7" stroke-linecap="round" opacity=".55">
+        <line x1="410" y1="40" x2="80" y2="40"/><line x1="410" y1="70" x2="110" y2="70"/><line x1="410" y1="100" x2="74" y2="100"/><line x1="410" y1="130" x2="140" y2="130"/><line x1="410" y1="158" x2="220" y2="158"/></g>
+      <g id="fixes" stroke="var(--red)" stroke-width="4" fill="none" stroke-linecap="round"></g>
+      <g id="mag"><circle r="30" fill="#dfe7ff" fill-opacity=".45" stroke="var(--blue)" stroke-width="7"/><line x1="21" y1="21" x2="46" y2="46" stroke="var(--blue)" stroke-width="10" stroke-linecap="round"/></g>
+    </svg>
+    <div class="card row" data-at="כתיב">${ICON.check("var(--blue)")}<div class="big">כתיב ופיסוק</div></div>
+    <div class="card row" data-at="זכר">${ICON.check("var(--blue)")}<div class="big">זכר ונקבה</div></div>
+    <div class="card row" data-at="ויחיד">${ICON.check("var(--blue)")}<div class="big">יחיד ורבים</div></div>
+    <div class="card row" data-at="ותקנו">${ICON.check("var(--blue)")}<div class="big">תיקונים ברורים ונקיים</div></div>
+  `},
+
+  outro: { title: "לסיכום", color: "var(--green)", html: `
+    <div class="card row" data-at="תכננו">${ICON.n(1, "var(--blue)")}<div class="big">תכננו</div></div>
+    <div class="card row" data-at="נקטו">${ICON.n(2, "var(--purple)")}<div class="big">נקטו עמדה</div></div>
+    <div class="card row" data-at="נמקו">${ICON.n(3, "var(--teal)")}<div class="big">נמקו עם דוגמאות</div></div>
+    <div class="card row" data-at="התייחסו">${ICON.n(4, "var(--orange)")}<div class="big">התייחסו לצד השני</div></div>
+    <div class="card row" data-at="וכתבו">${ICON.n(5, "var(--green)")}<div class="big">כתבו בשפה גבוהה</div></div>
+    <div data-at="בהצלחה" style="text-align:center;font-size:48px;font-weight:900;color:var(--green);margin-top:4px">בהצלחה במבחן!</div>
+  `},
+};
+const ORDER = Object.keys(SC);
+const CONNECTORS = ["ראשית", "שנית", "יתרה מזאת", "לעומת זאת", "אולם", "לפיכך", "ולסיכום"];
+const CONN_COLORS = ["#4c6ef5", "#4c6ef5", "#2fb36d", "#ef5560", "#ef5560", "#845ef7", "#ff9f43"];
+
+const nodes = {};
+const introLines = [];
+const fixes = [];
+
+window.init = function () {
+  // רקע מחברת
+  for (let y = 40; y < 960; y += 34) {
+    const l = document.createElementNS(NS, "line");
+    l.setAttribute("x1", 0); l.setAttribute("x2", 540); l.setAttribute("y1", y); l.setAttribute("y2", y);
+    $("lines").appendChild(l);
+  }
+  // פס התקדמות
+  ORDER.forEach(() => { const i = document.createElement("i"); i.appendChild(document.createElement("b")); $("prog").appendChild(i); });
+
+  ORDER.forEach((id, k) => {
+    const d = SC[id];
+    const el = document.createElement("div");
+    el.className = "scene"; el.id = "sc-" + id;
+    let hdr = "";
+    if (!d.noHdr) {
+      hdr = `<div class="hdr"><div class="num" style="background:${d.color}">${k}</div><div class="ttl">${d.title}</div></div>
+             <div class="uline" style="background:${d.color};width:150px"></div>`;
+    }
+    el.innerHTML = hdr + (d.noHdr ? d.html : `<div class="body">${d.html}</div>`);
+    $("root").appendChild(el);
+    nodes[id] = { el, items: [...el.querySelectorAll("[data-at]")], grows: [...el.querySelectorAll("[data-grow]")],
+                  uline: el.querySelector(".uline"), ttl: el.querySelector(".hdr") };
+  });
+
+  // מילות קישור: שרשרת שורות
+  const conn = $("conn");
+  for (let r = 0; r < 4; r++) {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:10px;justify-content:center";
+    conn.appendChild(row);
+  }
+  const rowsOf = [[0, 1], [2, 3], [4, 5], [6]];
+  rowsOf.forEach((idxs, r) => idxs.forEach((i) => {
+    const c = document.createElement("span");
+    c.className = "chip"; c.dataset.at = CONNECTORS[i];
+    c.style.cssText = `font-size:26px;padding:12px 24px;color:#fff;background:${CONN_COLORS[i]}`;
+    c.textContent = CONNECTORS[i] === "ולסיכום" ? "לסיכום" : CONNECTORS[i];
+    conn.children[r].appendChild(c);
+  }));
+  nodes.connectors.items = [...nodes.connectors.el.querySelectorAll("[data-at]")];
+
+  // דף כתיבה בפתיחה
+  for (let i = 0; i < 9; i++) {
+    const l = document.createElementNS(NS, "line");
+    const y = 82 + i * 28, x0 = 276, x1 = i === 8 ? 150 : (i % 3 === 2 ? 96 : 52);
+    l.setAttribute("x1", x0); l.setAttribute("y1", y); l.setAttribute("x2", x0); l.setAttribute("y2", y);
+    $("iLines").appendChild(l);
+    introLines.push({ l, y, x0, x1 });
+  }
+  // סימוני תיקון בבדיקה
+  [[300, 40], [180, 100], [260, 130]].forEach(([x, y]) => {
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", `M${x - 22} ${y + 10} q11 10 22 0 t22 0`);
+    $("fixes").appendChild(p); fixes.push(p);
+  });
+};
+
+// מתי הקריין מגיע למילה
+function whenSaid(sc, key) {
+  if (key === "^") return sc.start + 0.25;
+  const say = sc.say || "";
+  const i = say.indexOf(key);
+  if (i < 0) return sc.start + 0.3;
+  const frac = i / Math.max(1, say.length);
+  return sc.speechStart + frac * (sc.speechEnd - sc.speechStart) - 0.15;
+}
+
+window.drawScene = function (sc, p, t, info, local) {
+  const k = ORDER.indexOf(sc.id);
+  // פס התקדמות
+  [...$("prog").children].forEach((c, i) => {
+    c.firstChild.style.width = (i < k ? 100 : i === k ? 100 * p : 0) + "%";
+  });
+
+  for (const id of ORDER) {
+    const n = nodes[id];
+    if (id !== sc.id) { n.el.style.opacity = 0; continue; }
+    const dur = sc.end - sc.start;
+    const fade = Math.min(clamp(local / 0.35), clamp((dur - local) / 0.3));
+    n.el.style.opacity = fade;
+
+    if (n.ttl) {
+      const a = ease(clamp(local / 0.5));
+      n.ttl.style.transform = `translateX(${(1 - a) * -30}px)`;
+      n.ttl.style.opacity = a;
+      n.uline.style.transform = `scaleX(${ease(span(local, 0.2, 0.9))})`;
+    }
+    for (const it of n.items) {
+      const v = ease(clamp((t - whenSaid(sc, it.dataset.at)) / 0.45));
+      it.style.opacity = v;
+      const base = it.style.transform.includes("translateX(-50%)") ? "translateX(-50%) " : (it.style.transform.includes("rotate") ? "rotate(-1.5deg) " : "");
+      it.style.transform = `${base}translateY(${(1 - v) * 18}px) scale(${0.96 + 0.04 * v})`;
+    }
+    for (const g of n.grows) {
+      const v = ease(clamp((t - whenSaid(sc, g.dataset.grow)) / 0.9));
+      g.style.transformOrigin = "right center";
+      g.style.transform = `scaleX(${v})`;
+    }
+  }
+
+  // ---- אנימציות מיוחדות ----
+  if (sc.id === "intro") {
+    const per = 0.75;
+    introLines.forEach((L, i) => {
+      const v = clamp((local - 0.8 - i * per) / per);
+      const x = lerp(L.x0, L.x1, v);
+      L.l.setAttribute("x2", x);
+      L.l.setAttribute("opacity", v > 0 ? 1 : 0);
+    });
+    const cur = clamp(Math.floor((local - 0.8) / per), 0, introLines.length - 1);
+    const L = introLines[cur];
+    const v = clamp((local - 0.8 - cur * per) / per);
+    const px = lerp(L.x0, L.x1, v), py = L.y - 2 + Math.sin(local * 30) * 1.5;
+    $("pencil").setAttribute("transform", `translate(${px} ${py})`);
+  }
+  if (sc.id === "task") {
+    const a = ((t - whenSaid(sc, "שלושים")) * 0.9) % 1;
+    const ang = clamp(a) * Math.PI * 2;
+    $("clockHand").setAttribute("x2", 40 + 26 * Math.sin(ang));
+    $("clockHand").setAttribute("y2", 40 - 26 * Math.cos(ang));
+    const large = ang > Math.PI ? 1 : 0;
+    $("clockSweep").setAttribute("d", ang <= 0.01 ? "" : `M40 40 L40 9 A31 31 0 ${large} 1 ${40 + 31 * Math.sin(ang)} ${40 - 31 * Math.cos(ang)} Z`);
+  }
+  if (sc.id === "counter") {
+    const v = ease(clamp((t - whenSaid(sc, "עדיפה")) / 1.0));
+    const wob = 2.5 * Math.sin(local * 2.2) * (1 - v);
+    const ang = (lerp(0, 9, v) + wob) * Math.PI / 180;  // צד ימין (העמדה שלי) יורד
+    const cx = 242, cy = 70, r = 170;
+    $("beam").setAttribute("transform", `rotate(${ang * 180 / Math.PI} ${cx} ${cy})`);
+    $("panR").setAttribute("transform", `translate(${cx + r * Math.cos(ang)} ${cy + r * Math.sin(ang)})`);
+    $("panL").setAttribute("transform", `translate(${cx - r * Math.cos(ang)} ${cy - r * Math.sin(ang)})`);
+  }
+  if (sc.id === "register") {
+    const v = ease(clamp((t - whenSaid(sc, "כתבו: מדובר") + 0.6) / 0.5));
+    const s = $("strike"); s.style.width = "calc(100% + 8px)"; s.style.transform = `scaleX(${v})`;
+  }
+  if (sc.id === "connectors") {
+    // תנועה קלה של הצ'יפים
+    nodes.connectors.el.querySelectorAll("#conn .chip").forEach((c, i) => {
+      if (+c.style.opacity < 1) return;
+      c.style.transform = `translateY(${Math.sin(t * 2 + i) * 2.5}px)`;
+    });
+  }
+  if (sc.id === "review") {
+    const pts = [[380, 40], [300, 40], [180, 100], [110, 100], [260, 130], [200, 130], [360, 158]];
+    const q = clamp(local / Math.max(1, sc.speechEnd - sc.start)) * (pts.length - 1);
+    const i = Math.min(pts.length - 2, Math.floor(q)), f = ease(q - i);
+    const x = lerp(pts[i][0], pts[i + 1][0], f), y = lerp(pts[i][1], pts[i + 1][1], f);
+    $("mag").setAttribute("transform", `translate(${x} ${y})`);
+    fixes.forEach((fx, j) => fx.setAttribute("opacity", q > [1, 3, 5][j] ? 1 : 0));
+  }
+};
+</script>
+</body>
+</html>
