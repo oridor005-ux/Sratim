@@ -31,6 +31,9 @@
     <radialGradient id="gP" cx="0.35" cy="0.35" r="0.7">
       <stop offset="0" stop-color="#d0bfff"/><stop offset="1" stop-color="#7048e8"/>
     </radialGradient>
+    <radialGradient id="gS" cx="0.35" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#fff3bf"/><stop offset="1" stop-color="#f08c00"/>
+    </radialGradient>
     <radialGradient id="gEgg" cx="0.4" cy="0.35" r="0.75">
       <stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f1d9b5"/>
     </radialGradient>
@@ -164,6 +167,17 @@
     <text id="scaleNum" x="270" y="611" text-anchor="middle" font-size="34" font-weight="800" fill="#2b8a3e">0 גרם</text>
   </g>
 
+  <!-- השוואה: אותה כמות, משקל שונה -->
+  <g id="g-compare">
+    <g id="cmpAnalogy"></g>
+    <g id="cmpCols"></g>
+  </g>
+
+  <!-- אותו משקל, כמות שונה -->
+  <g id="g-samemass">
+    <g id="smCols"></g>
+  </g>
+
   <!-- ציר זמן -->
   <g id="g-measure">
     <rect x="417" y="200" width="6" height="470" rx="3" fill="#b197fc"/>
@@ -261,13 +275,50 @@ function showChip(k, v) {
 
 const HEADS = {
   intro: "", dozen: "נתחיל מתריסר", mole: "ועכשיו: מול", why: "למה מספר כל כך גדול?",
-  hist1: "משקל יחסי", hist2: "הרעיון של אבוגדרו", define: "ההגדרה החכמה",
+  hist1: "משקל יחסי", hist2: "הרעיון של אבוגדרו", define: "ההגדרה החכמה", compare: "אותה כמות, משקל שונה", samemass: "אותו משקל, כמות שונה",
   measure: "כמה בדיוק?", bridge: "אז מה זה בתכלס?", reaction: "למה זה חשוב?", outro: "בקיצור",
 };
 const SCENES = Object.keys(HEADS);
 
 const bgAtoms = [], introAtoms = [], eggs = [], moleDots = [], waterMols = [], hAtoms = [], gasA = [], gasB = [], pile = [];
 let oAtomG, tlItems = [], flowItems = [], rx = [], outAtoms = [];
+
+
+// ---- סצנות השוואה ----
+const ELEM = [
+  { sym: "S", name: "גופרית", mass: 32, r: 12.5, grad: "gS", x: 445 },
+  { sym: "O", name: "חמצן", mass: 16, r: 10, grad: "gO", x: 270 },
+  { sym: "C", name: "פחמן", mass: 12, r: 9, grad: "gC", x: 95 },
+];
+function pileSpots(n, r, cx, baseY) {
+  const out = []; let row = 0, left = n;
+  let per = Math.min(n, Math.floor(120 / (2 * r)));
+  while (left > 0) {
+    const k = Math.min(per, left);
+    for (let j = 0; j < k; j++) out.push([cx + (j - (k - 1) / 2) * 2 * r, baseY - r - row * (2 * r - 2)]);
+    left -= k; row++; per = Math.max(1, per - 1);
+  }
+  return out;
+}
+function column(parent, e, n, scaleText, underText) {
+  const g = mk("g", { opacity: 0 }, parent);
+  // אריח מהטבלה
+  mk("rect", { x: e.x - 58, y: 300, width: 116, height: 120, rx: 18, fill: "#ffffff", filter: "url(#shadow)" }, g);
+  mk("rect", { x: e.x - 58, y: 300, width: 116, height: 120, rx: 18, fill: "none", stroke: "#7048e8", "stroke-width": 3 }, g);
+  const t1 = mk("text", { x: e.x, y: 330, "text-anchor": "middle", "font-size": 22, "font-weight": 800, fill: "#7048e8", class: "num" }, g); t1.textContent = e.mass;
+  const t2 = mk("text", { x: e.x, y: 382, "text-anchor": "middle", "font-size": 46, "font-weight": 800, fill: "#1f2a44", class: "num" }, g); t2.textContent = e.sym;
+  const t3 = mk("text", { x: e.x, y: 409, "text-anchor": "middle", "font-size": 18, "font-weight": 600, fill: "#5c5f7a" }, g); t3.textContent = e.name;
+  // ערימה
+  const atoms = pileSpots(n, e.r, e.x, 556).map(([x, y], i) => ({ g: atom(g, x, y, e.r, e.grad), x, y, d: i / n }));
+  // משקל
+  mk("rect", { x: e.x - 70, y: 556, width: 140, height: 12, rx: 6, fill: "#868e96" }, g);
+  mk("rect", { x: e.x - 64, y: 566, width: 128, height: 66, rx: 16, fill: "#495057", filter: "url(#shadow)" }, g);
+  mk("rect", { x: e.x - 50, y: 578, width: 100, height: 40, rx: 10, fill: "#d3f9d8" }, g);
+  const st = mk("text", { x: e.x, y: 606, "text-anchor": "middle", "font-size": 22, "font-weight": 800, fill: "#2b8a3e" }, g); st.textContent = scaleText;
+  const ut = mk("text", { x: e.x, y: 668, "text-anchor": "middle", "font-size": 22, "font-weight": 800, fill: "#7048e8" }, g); ut.textContent = underText;
+  return { g, atoms, ut };
+}
+let cmpCols = [], smCols = [], analogy;
 
 window.init = function () {
   // אטומים מרחפים ברקע
@@ -335,6 +386,30 @@ window.init = function () {
     p.gw = water($("pile"), p.x, p.y, 0.8);
   });
   chip("oneMol", "= מול אחד", 270, 700, { fs: 28, h: 56, bg: "#7048e8", color: "#ffffff" });
+
+  // השוואה: ביצים מול אבטיחים
+  analogy = mk("g", { opacity: 0 }, $("cmpAnalogy"));
+  for (let i = 0; i < 6; i++) {
+    const eg = mk("g", { transform: `translate(${335 + (i % 3) * 34} ${200 + Math.floor(i / 3) * 44})` }, analogy);
+    mk("ellipse", { rx: 13, ry: 17, fill: "url(#gEgg)", stroke: "#e9c79c", "stroke-width": 2 }, eg);
+  }
+  for (let i = 0; i < 2; i++) {
+    const wm = mk("g", { transform: `translate(${140 + i * 70} 222)` }, analogy);
+    mk("ellipse", { rx: 32, ry: 26, fill: "#2f9e44" }, wm);
+    for (let k = -2; k <= 2; k++) mk("path", { d: `M${k * 10} -24 Q${k * 14} 0 ${k * 10} 24`, stroke: "#8ce99a", "stroke-width": 3, fill: "none" }, wm);
+  }
+  const a1 = mk("text", { x: 369, y: 290, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: "#1f2a44" }, analogy); a1.textContent = "12 ביצים";
+  const a2 = mk("text", { x: 175, y: 290, "text-anchor": "middle", "font-size": 20, "font-weight": 700, fill: "#1f2a44" }, analogy); a2.textContent = "12 אבטיחים";
+  const a3 = mk("text", { x: 270, y: 232, "text-anchor": "middle", "font-size": 30, "font-weight": 800, fill: "#7048e8" }, analogy); a3.textContent = "≠";
+  // שלוש עמודות: מול אחד מכל יסוד
+  ELEM.forEach((e) => cmpCols.push(column($("cmpCols"), e, 10, `${e.mass} גרם`, "מול אחד")));
+  chip("cmpSame", "בכל ערימה: אותו מספר אטומים", 270, 720, { fs: 22 });
+  chip("cmpWhy", "ההבדל: כמה כבד כל אטום", 270, 770, { bg: "#7048e8", color: "#ffffff" });
+  // אותו משקל: 32 גרם מכל אחד
+  const counts = [6, 12, 16], unders = ["מול אחד", "2 מולים", "בערך 2.7 מולים"];
+  ELEM.forEach((e, i) => smCols.push(column($("smCols"), e, counts[i], "32 גרם", unders[i])));
+  chip("smDiff", "אותו משקל, מספר אטומים שונה", 270, 720, { fs: 22 });
+  chip("smRule", "לכן סופרים במולים, לא בגרמים", 270, 770, { bg: "#7048e8", color: "#ffffff" });
   // ציר זמן
   const items = [
     ["1811", "אבוגדרו: נפחים שווים", 260],
@@ -511,6 +586,38 @@ window.drawScene = function (sc, p, t, info, local) {
     const g = w < 0.5 ? Math.round(12 * ease(pc)) : Math.round(18 * ease(pw));
     $("scaleNum").textContent = `${g} גרם`;
     showChip("oneMol", (span(sp, 0.55, 0.6) * (1 - span(sp, 0.64, 0.68)) + span(sp, 0.9, 0.95)) * vis);
+  }
+
+  if (sc.id === "compare") {
+    const an = span(sp, 0.04, 0.1) * (1 - span(sp, 0.3, 0.36));
+    analogy.setAttribute("opacity", an);
+    analogy.setAttribute("transform", `translate(0 ${(1 - an) * 10})`);
+    const at = [0.34, 0.45, 0.56];
+    // עמודות לפי סדר הדיבור: פחמן, חמצן, גופרית
+    [2, 1, 0].forEach((ci, j) => {
+      const c = cmpCols[ci], v = ease(span(sp, at[j], at[j] + 0.05));
+      c.g.setAttribute("opacity", v);
+      c.atoms.forEach((a) => {
+        const k = span(sp, at[j] + 0.02 + a.d * 0.06, at[j] + 0.05 + a.d * 0.06);
+        a.g.setAttribute("transform", `translate(${a.x} ${a.y - (1 - k) * 30}) scale(${k})`);
+      });
+      c.ut.setAttribute("opacity", span(sp, 0.66, 0.7));
+    });
+    C("cmpSame", 0.68); C("cmpWhy", 0.85);
+  }
+
+  if (sc.id === "samemass") {
+    const at = [0.12, 0.24, 0.42];
+    [0, 1, 2].forEach((ci, j) => {
+      const c = smCols[ci], v = ease(span(sp, at[j], at[j] + 0.05));
+      c.g.setAttribute("opacity", v);
+      c.atoms.forEach((a) => {
+        const k = span(sp, at[j] + 0.02 + a.d * 0.07, at[j] + 0.05 + a.d * 0.07);
+        a.g.setAttribute("transform", `translate(${a.x} ${a.y - (1 - k) * 30}) scale(${k})`);
+      });
+      c.ut.setAttribute("opacity", span(sp, at[j] + 0.06, at[j] + 0.1));
+    });
+    C("smDiff", 0.6); C("smRule", 0.8);
   }
 
   if (sc.id === "measure") {
