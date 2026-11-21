@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מה זה מול?</title>
+<link rel="stylesheet" href="../../factory/frame.css">
+<style>
+  body { background: #f3f0ff; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .lbl { font-size: 19px; font-weight: 600; fill: #1f2a44; }
+  .num { direction: ltr; unicode-bidi: isolate; }
+</style>
+<script src="../../factory/frame.js"></script>
+</head>
+<body>
+<svg id="s" viewBox="0 0 540 960" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#e7e0ff"/>
+      <stop offset="1" stop-color="#f7f3ff"/>
+    </linearGradient>
+    <radialGradient id="gO" cx="0.35" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#ffa8a8"/><stop offset="1" stop-color="#e03131"/>
+    </radialGradient>
+    <radialGradient id="gH" cx="0.35" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#a5d8ff"/>
+    </radialGradient>
+    <radialGradient id="gC" cx="0.35" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#868e96"/><stop offset="1" stop-color="#343a40"/>
+    </radialGradient>
+    <radialGradient id="gP" cx="0.35" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="#d0bfff"/><stop offset="1" stop-color="#7048e8"/>
+    </radialGradient>
+    <radialGradient id="gEgg" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f1d9b5"/>
+    </radialGradient>
+    <linearGradient id="gDrop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a5d8ff"/><stop offset="1" stop-color="#339af0"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#1f2a44" flood-opacity="0.15"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="blur14"><feGaussianBlur stdDeviation="14"/></filter>
+    <clipPath id="lensClip"><circle cx="270" cy="545" r="138"/></clipPath>
+    <marker id="arr" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#7048e8"/>
+    </marker>
+  </defs>
+
+  <rect width="540" height="960" fill="url(#bg)"/>
+  <circle cx="470" cy="140" r="150" fill="#ffffff" opacity="0.35" filter="url(#blur14)"/>
+  <circle cx="60" cy="760" r="170" fill="#d0bfff" opacity="0.25" filter="url(#blur14)"/>
+  <g id="bgAtoms" opacity="0.18"></g>
+
+  <!-- כותרת עליונה לכל סצנה -->
+  <g id="headG">
+    <text id="head" x="270" y="104" text-anchor="middle" font-size="34" font-weight="800" fill="#1f2a44"></text>
+    <rect id="headBar" x="230" y="120" width="80" height="6" rx="3" fill="#7048e8"/>
+  </g>
+
+  <!-- פתיחה -->
+  <g id="g-intro">
+    <g id="introAtoms"></g>
+    <text id="introSmall" x="270" y="300" text-anchor="middle" font-size="40" font-weight="600" fill="#5c5f7a">מה זה בעצם</text>
+    <text id="introBig" x="270" y="440" text-anchor="middle" font-size="140" font-weight="800" fill="#7048e8">מול?</text>
+    <rect id="introBar" x="170" y="476" width="200" height="10" rx="5" fill="#ffb347"/>
+    <text id="introSub" x="270" y="560" text-anchor="middle" font-size="26" font-weight="500" fill="#5c5f7a">הסבר קצר וברור, מאפס</text>
+  </g>
+
+  <!-- תריסר -->
+  <g id="g-dozen">
+    <text id="dozenCount" x="270" y="250" text-anchor="middle" font-size="76" font-weight="800" fill="#7048e8" class="num">0</text>
+    <g filter="url(#shadow)">
+      <rect x="70" y="300" width="400" height="190" rx="28" fill="#c9a27c"/>
+    </g>
+    <rect x="70" y="300" width="400" height="190" rx="28" fill="none" stroke="#b08968" stroke-width="4"/>
+    <g id="eggCups"></g>
+    <g id="eggs"></g>
+  </g>
+
+  <!-- מול = מספר ענק -->
+  <g id="g-mole">
+    <text id="moleEq" x="270" y="250" text-anchor="middle" font-size="46" font-weight="800" fill="#1f2a44">מול אחד =</text>
+    <text id="moleL1" x="270" y="350" text-anchor="middle" font-size="54" font-weight="800" fill="#7048e8" class="num"></text>
+    <text id="moleL2" x="270" y="420" text-anchor="middle" font-size="44" font-weight="800" fill="#7048e8" class="num"></text>
+    <g id="moleDots"></g>
+  </g>
+
+  <!-- למה מספר גדול -->
+  <g id="g-why">
+    <g id="dropG">
+      <path d="M270 185 C270 185 222 245 222 280 C222 307 244 328 270 328 C296 328 318 307 318 280 C318 245 270 185 270 185 Z" fill="url(#gDrop)" filter="url(#shadow)"/>
+      <ellipse cx="252" cy="282" rx="9" ry="16" fill="#ffffff" opacity="0.5"/>
+    </g>
+    <path id="lensLine1" d="M245 320 L170 430" stroke="#7048e8" stroke-width="3" stroke-dasharray="6 6" fill="none"/>
+    <path id="lensLine2" d="M295 320 L370 430" stroke="#7048e8" stroke-width="3" stroke-dasharray="6 6" fill="none"/>
+    <circle cx="270" cy="545" r="146" fill="#ffffff" filter="url(#shadow)"/>
+    <g clip-path="url(#lensClip)">
+      <rect x="120" y="400" width="300" height="300" fill="#e7f5ff"/>
+      <g id="waterMols"></g>
+    </g>
+    <circle cx="270" cy="545" r="142" fill="none" stroke="#7048e8" stroke-width="8"/>
+  </g>
+
+  <!-- משקל יחסי: מאזניים -->
+  <g id="g-hist1">
+    <path d="M220 660 L320 660 L285 620 L255 620 Z" fill="#9775fa"/>
+    <rect x="263" y="330" width="14" height="300" rx="7" fill="#9775fa"/>
+    <circle cx="270" cy="330" r="14" fill="#7048e8"/>
+    <g id="beam"><rect x="100" y="324" width="340" height="12" rx="6" fill="#7048e8"/></g>
+    <g id="panL">
+      <path d="M0 0 L-60 110 M0 0 L60 110" stroke="#9775fa" stroke-width="3"/>
+      <path d="M-78 110 L78 110 C70 140 -70 140 -78 110 Z" fill="#b197fc"/>
+      <g id="hAtoms"></g>
+    </g>
+    <g id="panR">
+      <path d="M0 0 L-60 110 M0 0 L60 110" stroke="#9775fa" stroke-width="3"/>
+      <path d="M-78 110 L78 110 C70 140 -70 140 -78 110 Z" fill="#b197fc"/>
+      <g id="oAtom"></g>
+    </g>
+  </g>
+
+  <!-- אבוגדרו: שני מכלים -->
+  <g id="g-hist2">
+    <g filter="url(#shadow)">
+      <rect x="60" y="250" width="190" height="300" rx="26" fill="#ffffff"/>
+      <rect x="290" y="250" width="190" height="300" rx="26" fill="#ffffff"/>
+    </g>
+    <rect x="60" y="250" width="190" height="300" rx="26" fill="none" stroke="#a5d8ff" stroke-width="5"/>
+    <rect x="290" y="250" width="190" height="300" rx="26" fill="none" stroke="#ffa8a8" stroke-width="5"/>
+    <g id="gasA"></g>
+    <g id="gasB"></g>
+    <text id="cntA" x="155" y="600" text-anchor="middle" font-size="30" font-weight="800" fill="#1971c2" class="num">10</text>
+    <text id="cntB" x="385" y="600" text-anchor="middle" font-size="30" font-weight="800" fill="#c92a2a" class="num">10</text>
+  </g>
+
+  <!-- ההגדרה: טבלה -> משקל -->
+  <g id="g-define">
+    <g id="tileG" filter="url(#shadow)">
+      <rect x="195" y="170" width="150" height="170" rx="22" fill="#ffffff"/>
+    </g>
+    <rect x="195" y="170" width="150" height="170" rx="22" fill="none" stroke="#7048e8" stroke-width="4"/>
+    <g id="tileC">
+      <text x="270" y="210" text-anchor="middle" font-size="30" font-weight="800" fill="#7048e8" class="num">12</text>
+      <text x="270" y="282" text-anchor="middle" font-size="64" font-weight="800" fill="#1f2a44" class="num">C</text>
+      <text x="270" y="322" text-anchor="middle" font-size="22" font-weight="600" fill="#5c5f7a">פחמן</text>
+    </g>
+    <g id="tileW">
+      <text x="270" y="210" text-anchor="middle" font-size="30" font-weight="800" fill="#7048e8" class="num">18</text>
+      <g id="tileWmol"></g>
+      <text x="270" y="322" text-anchor="middle" font-size="22" font-weight="600" fill="#5c5f7a">מים</text>
+    </g>
+    <path d="M270 350 L270 400" stroke="#7048e8" stroke-width="5" marker-end="url(#arr)"/>
+    <g id="pile"></g>
+    <g filter="url(#shadow)">
+      <rect x="140" y="540" width="260" height="110" rx="22" fill="#495057"/>
+    </g>
+    <rect x="150" y="530" width="240" height="16" rx="8" fill="#868e96"/>
+    <rect x="180" y="570" width="180" height="56" rx="12" fill="#d3f9d8"/>
+    <text id="scaleNum" x="270" y="611" text-anchor="middle" font-size="34" font-weight="800" fill="#2b8a3e">0 גרם</text>
+  </g>
+
+  <!-- ציר זמן -->
+  <g id="g-measure">
+    <rect x="417" y="200" width="6" height="470" rx="3" fill="#b197fc"/>
+    <g id="tl"></g>
+  </g>
+
+  <!-- הגשר -->
+  <g id="g-bridge">
+    <g id="flow"></g>
+    <circle id="runner" r="8" fill="#ffb347" filter="url(#glow)"/>
+  </g>
+
+  <!-- תגובה -->
+  <g id="g-reaction">
+    <text id="rxArrow" x="270" y="460" text-anchor="middle" font-size="48" font-weight="800" fill="#7048e8">↓</text>
+    <g id="rxAtoms"></g>
+  </g>
+
+  <!-- סיכום -->
+  <g id="g-outro">
+    <text id="outBig" x="270" y="270" text-anchor="middle" font-size="64" font-weight="800" fill="#7048e8">מול = מספר</text>
+    <text id="outSub" x="270" y="330" text-anchor="middle" font-size="28" font-weight="600" fill="#5c5f7a">כמו תריסר, רק ענק</text>
+    <path id="arch" d="M140 560 C170 400 370 400 400 560" fill="none" stroke="#7048e8" stroke-width="8" stroke-linecap="round" stroke-dasharray="6 14"/>
+    <g id="outAtoms"></g>
+    <g id="outScale">
+      <rect x="340" y="600" width="120" height="56" rx="14" fill="#495057" filter="url(#shadow)"/>
+      <rect x="350" y="590" width="100" height="12" rx="6" fill="#868e96"/>
+      <rect x="358" y="612" width="84" height="32" rx="8" fill="#d3f9d8"/>
+      <text x="400" y="636" text-anchor="middle" font-size="20" font-weight="800" fill="#2b8a3e">גרמים</text>
+    </g>
+    <text x="140" y="690" text-anchor="middle" font-size="22" font-weight="700" fill="#1f2a44">אטומים</text>
+    <text x="400" y="690" text-anchor="middle" font-size="22" font-weight="700" fill="#1f2a44">משקל</text>
+  </g>
+
+  <g id="chips"></g>
+</svg>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const { clamp, lerp, ease, span, $ } = H;
+const mk = (tag, attrs, parent) => {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  (parent || $("s")).appendChild(e);
+  return e;
+};
+// מספר פסאודו־אקראי קבוע (כדי שכל פריים ייצא זהה)
+let seed = 7;
+const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+function atom(parent, x, y, r, grad, letter) {
+  const g = mk("g", { transform: `translate(${x} ${y})` }, parent);
+  mk("circle", { r, fill: `url(#${grad})` }, g);
+  if (letter) {
+    const t = mk("text", { y: r * 0.36, "text-anchor": "middle", "font-size": r * 1.05, "font-weight": 800,
+      fill: grad === "gH" ? "#1864ab" : "#ffffff", class: "num" }, g);
+    t.textContent = letter;
+  }
+  return g;
+}
+function water(parent, x, y, s) {
+  const g = mk("g", { transform: `translate(${x} ${y}) scale(${s})` }, parent);
+  mk("circle", { cx: -11, cy: 8, r: 7, fill: "url(#gH)" }, g);
+  mk("circle", { cx: 11, cy: 8, r: 7, fill: "url(#gH)" }, g);
+  mk("circle", { cx: 0, cy: 0, r: 11, fill: "url(#gO)" }, g);
+  return g;
+}
+
+// תוויות מעוגלות
+const chips = {};
+function chip(key, text, x, y, opt = {}) {
+  const g = mk("g", { opacity: 0 }, opt.parent || $("chips"));
+  const h = opt.h || 46;
+  const r = mk("rect", { rx: h / 2, height: h, y: y - h / 2, fill: opt.bg || "#ffffff", filter: "url(#shadow)" }, g);
+  const t = mk("text", { x, y: y + (opt.fs || 22) * 0.36, "text-anchor": "middle", "font-size": opt.fs || 22,
+    "font-weight": opt.fw || 700, fill: opt.color || "#1f2a44" }, g);
+  t.textContent = text;
+  chips[key] = { g, r, t, x, sized: false };
+}
+function sizeChips() {
+  for (const k in chips) {
+    const c = chips[k];
+    if (c.sized) continue;
+    const w = c.t.getComputedTextLength() + 40;
+    if (w < 45) continue;
+    c.r.setAttribute("x", c.x - w / 2); c.r.setAttribute("width", w);
+    c.sized = true;
+  }
+}
+function showChip(k, v) {
+  const c = chips[k], e = ease(clamp(v));
+  c.g.setAttribute("opacity", e);
+  c.g.setAttribute("transform", `translate(0 ${(1 - e) * 12})`);
+}
+
+const HEADS = {
+  intro: "", dozen: "נתחיל מתריסר", mole: "ועכשיו: מול", why: "למה מספר כל כך גדול?",
+  hist1: "משקל יחסי", hist2: "הרעיון של אבוגדרו", define: "ההגדרה החכמה",
+  measure: "כמה בדיוק?", bridge: "אז מה זה בתכלס?", reaction: "למה זה חשוב?", outro: "בקיצור",
+};
+const SCENES = Object.keys(HEADS);
+
+const bgAtoms = [], introAtoms = [], eggs = [], moleDots = [], waterMols = [], hAtoms = [], gasA = [], gasB = [], pile = [];
+let oAtomG, tlItems = [], flowItems = [], rx = [], outAtoms = [];
+
+window.init = function () {
+  // אטומים מרחפים ברקע
+  for (let i = 0; i < 10; i++) {
+    const g = atom($("bgAtoms"), 0, 0, 8 + rnd() * 14, ["gP", "gO", "gH"][i % 3]);
+    bgAtoms.push({ g, x: rnd() * 540, y: 160 + rnd() * 600, ph: rnd() * 6, sp: 0.2 + rnd() * 0.3 });
+  }
+  // פתיחה: אטומים במסלול
+  for (let i = 0; i < 9; i++) {
+    const g = atom($("introAtoms"), 0, 0, 12 + (i % 3) * 5, ["gO", "gH", "gC", "gP"][i % 4], ["O", "H", "C", ""][i % 4]);
+    introAtoms.push({ g, a: (i / 9) * Math.PI * 2, rx: 210, ry: 230 });
+  }
+  // תריסר: 12 ביצים
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 6; c++) {
+    const x = 110 + c * 64, y = 350 + r * 90;
+    mk("ellipse", { cx: x, cy: y + 14, rx: 27, ry: 14, fill: "#a47148", opacity: 0.6 }, $("eggCups"));
+    const g = mk("g", {}, $("eggs"));
+    mk("ellipse", { cx: 0, cy: 0, rx: 23, ry: 30, fill: "url(#gEgg)", stroke: "#e9c79c", "stroke-width": 2 }, g);
+    eggs.push({ g, x, y: y - 6 });
+  }
+  chip("dozen12", "תריסר = 12", 270, 570, { fs: 30, h: 58, color: "#7048e8" });
+  chip("dozenNot", "לא משקל, לא נפח: כמות", 270, 650);
+  // מול: נקודות
+  for (let i = 0; i < 120; i++) {
+    const c = mk("circle", { cx: 50 + rnd() * 440, cy: 520 + rnd() * 200, r: 2.5 + rnd() * 3.5,
+      fill: ["#7048e8", "#e03131", "#339af0", "#ffb347"][i % 4], opacity: 0 }, $("moleDots"));
+    moleDots.push({ c, d: rnd() });
+  }
+  chip("moleApprox", "\u2066≈ 6 × 10²³\u2069", 270, 490, { fs: 30, h: 58, color: "#7048e8" });
+  chip("moleParticles", "חלקיקים: אטומים, מולקולות, יונים", 270, 750);
+  // מולקולות מים בתוך הזכוכית המגדלת
+  for (let i = 0; i < 70; i++) {
+    const g = water($("waterMols"), 0, 0, 0.9);
+    waterMols.push({ g, x: 130 + (i % 10) * 31 + ((Math.floor(i / 10) % 2) * 15), y: 420 + Math.floor(i / 10) * 40,
+      ph: rnd() * 6, rot: rnd() * 360, d: rnd() });
+  }
+  chip("whyDrop", "טיפה אחת ≈ 1,700 מיליארד מיליארד מולקולות", 270, 740, { fs: 20 });
+  // מאזניים
+  for (let i = 0; i < 16; i++) {
+    const g = atom($("hAtoms"), -48 + (i % 6) * 19 + (Math.floor(i / 6) % 2) * 9, 98 - Math.floor(i / 6) * 16, 9, "gH");
+    hAtoms.push(g);
+  }
+  oAtomG = atom($("oAtom"), 0, 76, 34, "gO", "O");
+  chip("hLbl", "מימן: 1", 120, 560, { color: "#1971c2" });
+  chip("oLbl", "חמצן: 16", 420, 560, { color: "#c92a2a" });
+  chip("h16", "16 אטומי מימן = אטום חמצן אחד", 270, 700);
+  chip("table", "מכאן המספרים בטבלה המחזורית", 270, 760, { bg: "#7048e8", color: "#ffffff" });
+  // אבוגדרו: גז
+  for (let i = 0; i < 10; i++) {
+    gasA.push({ g: atom($("gasA"), 0, 0, 11, "gH"), ph: rnd() * 6, ph2: rnd() * 6, w: 0.8 + rnd() });
+    gasB.push({ g: atom($("gasB"), 0, 0, 16, "gO"), ph: rnd() * 6, ph2: rnd() * 6, w: 0.6 + rnd() * 0.8 });
+  }
+  chip("avoYear", "אבוגדרו, 1811", 270, 190, { color: "#7048e8" });
+  chip("avoRule", "נפח שווה = אותו מספר חלקיקים", 270, 670, { fs: 23 });
+  chip("avoMass", "גם אם המשקל שונה", 270, 735);
+  // ההגדרה
+  water($("tileWmol"), 270, 262, 2.1);
+  for (let i = 0; i < 22; i++) {
+    const row = i < 8 ? 0 : i < 14 ? 1 : i < 19 ? 2 : 3;
+    const inRow = [8, 6, 5, 3][row], idx = i - [0, 8, 14, 19][row];
+    pile.push({ x: 270 + (idx - (inRow - 1) / 2) * 24, y: 512 - row * 20, d: i / 22 });
+  }
+  pile.forEach((p) => {
+    p.gc = atom($("pile"), p.x, p.y, 11, "gC");
+    p.gw = water($("pile"), p.x, p.y, 0.8);
+  });
+  chip("oneMol", "= מול אחד", 270, 700, { fs: 28, h: 56, bg: "#7048e8", color: "#ffffff" });
+  // ציר זמן
+  const items = [
+    ["1811", "אבוגדרו: נפחים שווים", 260],
+    ["1909", "ניסויים מודדים: בערך \u20666 × 10²³\u2069", 420],
+    ["2019", "נקבע רשמית: \u20666.02214076 × 10²³\u2069", 580],
+  ];
+  items.forEach(([yr, txt, y], i) => {
+    const g = mk("g", { opacity: 0 }, $("tl"));
+    mk("circle", { cx: 420, cy: y, r: 16, fill: "#7048e8" }, g);
+    mk("circle", { cx: 420, cy: y, r: 7, fill: "#ffffff" }, g);
+    mk("rect", { x: 40, y: y - 52, width: 350, height: 104, rx: 22, fill: "#ffffff", filter: "url(#shadow)" }, g);
+    const t1 = mk("text", { x: 370, y: y - 10, "text-anchor": "end", "font-size": 32, "font-weight": 800, fill: "#7048e8", class: "num" }, g);
+    t1.textContent = yr;
+    const t2 = mk("text", { x: 370, y: y + 28, "text-anchor": "start", "font-size": 20, "font-weight": 600, fill: "#1f2a44" }, g);
+    t2.textContent = txt;
+    tlItems.push(g);
+  });
+  // הגשר
+  const boxes = [["⚖  גרמים", 200, "#ffe8cc", "#d9480f"], ["מולים", 400, "#e5dbff", "#7048e8"], ["חלקיקים", 600, "#d3f9d8", "#2b8a3e"]];
+  const ops = [["÷ משקל של מול אחד", 300], ["\u2066× 6 × 10²³\u2069", 500]];
+  boxes.forEach(([txt, y, bg, fg]) => {
+    const g = mk("g", { opacity: 0 }, $("flow"));
+    mk("rect", { x: 130, y: y - 38, width: 280, height: 76, rx: 24, fill: bg, filter: "url(#shadow)" }, g);
+    const t = mk("text", { x: 270, y: y + 12, "text-anchor": "middle", "font-size": 34, "font-weight": 800, fill: fg }, g);
+    t.textContent = txt;
+    flowItems.push(g);
+  });
+  ops.forEach(([txt, y]) => {
+    const g = mk("g", { opacity: 0 }, $("flow"));
+    mk("path", { d: `M270 ${y - 56} L270 ${y + 42}`, stroke: "#7048e8", "stroke-width": 5, "marker-end": "url(#arr)" }, g);
+    mk("rect", { x: 270, y: y - 20, width: 0, height: 40, rx: 20, fill: "#ffffff", class: "opbg", filter: "url(#shadow)" }, g);
+    const t = mk("text", { x: 270, y: y + 8, "text-anchor": "middle", "font-size": 21, "font-weight": 700, fill: "#7048e8" }, g);
+    t.textContent = txt;
+    g.dataset.op = 1;
+    flowItems.push(g);
+  });
+  chip("ex", "20 גרם ÷ 40 = חצי מול", 270, 730, { fs: 26, h: 58, bg: "#ffb347", color: "#1f2a44" });
+  // תגובה: 4 מימן + 2 חמצן -> 2 מים
+  const from = [[95, 330, "H"], [125, 330, "H"], [205, 330, "H"], [235, 330, "H"], [380, 330, "O"], [420, 330, "O"]];
+  const to = [[150, 590, "H"], [210, 590, "H"], [330, 590, "H"], [390, 590, "H"], [180, 565, "O"], [360, 565, "O"]];
+  from.forEach((f, i) => {
+    const big = f[2] === "O";
+    rx.push({ g: atom($("rxAtoms"), 0, 0, big ? 22 : 15, big ? "gO" : "gH", f[2]), from: f, to: to[i] });
+  });
+  chip("rxTop", "2 מימן + 1 חמצן", 270, 395, { fs: 22 });
+  chip("rxBot", "2 מים", 270, 650, { fs: 22 });
+  chip("rxMol", "2 מול + 1 מול  ←  2 מול", 270, 710, { fs: 22, bg: "#e5dbff", color: "#7048e8" });
+  chip("rxGram", "4 גרם + 32 גרם  ←  36 גרם", 270, 765, { fs: 22, bg: "#d3f9d8", color: "#2b8a3e" });
+  // סיכום
+  for (let i = 0; i < 12; i++) {
+    outAtoms.push({ g: atom($("outAtoms"), 0, 0, 9 + (i % 3) * 3, ["gO", "gH", "gP", "gC"][i % 4]), a: rnd() * 6, r: 18 + rnd() * 34, w: 0.5 + rnd() });
+  }
+  chip("outNum", "\u20666 × 10²³\u2069", 270, 445, { fs: 26, h: 54, bg: "#7048e8", color: "#ffffff" });
+};
+
+window.drawScene = function (sc, p, t, info, local) {
+  sizeChips();
+  const sp = clamp((t - sc.speechStart) / Math.max(0.1, sc.speechEnd - sc.speechStart));
+  const vis = ease(clamp(local / 0.55)) * ease(clamp((sc.end - t) / 0.45));
+
+  // כותרת
+  const headTxt = HEADS[sc.id] || "";
+  $("head").textContent = headTxt;
+  $("headG").setAttribute("opacity", headTxt ? vis : 0);
+  const hb = ease(span(local, 0.2, 0.9));
+  $("headBar").setAttribute("width", 80 * hb); $("headBar").setAttribute("x", 270 - 40 * hb);
+
+  for (const id of SCENES) $("g-" + id).setAttribute("opacity", id === sc.id ? vis : 0);
+  for (const k in chips) showChip(k, 0);
+  const C = (k, a) => showChip(k, span(sp, a, a + 0.06) * vis);
+
+  bgAtoms.forEach((b) => {
+    const y = b.y + 22 * Math.sin(t * b.sp + b.ph), x = b.x + 16 * Math.cos(t * b.sp * 0.8 + b.ph);
+    b.g.setAttribute("transform", `translate(${x} ${y})`);
+  });
+
+  if (sc.id === "intro") {
+    introAtoms.forEach((a, i) => {
+      const ang = a.a + t * 0.5;
+      const k = ease(span(local, 0.2 + i * 0.08, 0.9 + i * 0.08));
+      a.g.setAttribute("transform", `translate(${270 + Math.cos(ang) * a.rx * k} ${410 + Math.sin(ang) * a.ry * k}) scale(${k})`);
+    });
+    const b = ease(span(local, 0.3, 1.1));
+    $("introBig").setAttribute("transform", `translate(270 400) scale(${0.6 + 0.4 * b + 0.02 * Math.sin(t * 3)}) translate(-270 -400)`);
+    $("introBig").setAttribute("opacity", b);
+    $("introSmall").setAttribute("opacity", ease(span(local, 0, 0.6)));
+    const bar = ease(span(local, 0.9, 1.7));
+    $("introBar").setAttribute("width", 200 * bar); $("introBar").setAttribute("x", 270 - 100 * bar);
+    $("introSub").setAttribute("opacity", ease(span(sp, 0.45, 0.6)));
+  }
+
+  if (sc.id === "dozen") {
+    let n = 0;
+    eggs.forEach((e, i) => {
+      const k = span(sp, 0.12 + i * 0.03, 0.15 + i * 0.03);
+      if (k > 0.5) n++;
+      const s = k <= 0 ? 0 : 1 + 0.25 * Math.sin(Math.PI * k);
+      e.g.setAttribute("transform", `translate(${e.x} ${e.y - (1 - k) * 30}) scale(${s})`);
+      e.g.setAttribute("opacity", k > 0 ? 1 : 0);
+    });
+    $("dozenCount").textContent = String(n);
+    C("dozen12", 0.55); C("dozenNot", 0.72);
+  }
+
+  if (sc.id === "mole") {
+    const full = "602,214,076,000,000,000,000,000";
+    const k = span(sp, 0.08, 0.5);
+    const shown = Math.floor(full.length * k);
+    const l1 = full.slice(0, 12), l2 = full.slice(12);
+    $("moleL1").textContent = l1.slice(0, Math.min(shown, 12)).replace(/,$/, "");
+    $("moleL2").textContent = shown > 12 ? l2.slice(0, shown - 12) : "";
+    C("moleApprox", 0.48);
+    moleDots.forEach((d) => {
+      const v = span(sp, 0.62 + d.d * 0.25, 0.66 + d.d * 0.25);
+      d.c.setAttribute("opacity", v * (0.6 + 0.4 * Math.sin(t * 3 + d.d * 20)));
+    });
+    C("moleParticles", 0.75);
+  }
+
+  if (sc.id === "why") {
+    const z = ease(span(local, 0.2, 1.2));
+    $("dropG").setAttribute("transform", `translate(270 260) scale(${0.6 + 0.4 * z}) translate(-270 -260)`);
+    const lens = span(sp, 0.25, 0.4);
+    $("lensLine1").setAttribute("opacity", lens); $("lensLine2").setAttribute("opacity", lens);
+    waterMols.forEach((m) => {
+      const v = span(sp, 0.3 + m.d * 0.35, 0.35 + m.d * 0.35);
+      const dx = 4 * Math.sin(t * 2 + m.ph), dy = 4 * Math.cos(t * 1.7 + m.ph);
+      m.g.setAttribute("transform", `translate(${m.x + dx} ${m.y + dy}) rotate(${m.rot + t * 30}) scale(${0.9 * v})`);
+    });
+    C("whyDrop", 0.55);
+  }
+
+  if (sc.id === "hist1") {
+    const nH = Math.round(lerp(1, 16, ease(span(sp, 0.45, 0.72))));
+    const oIn = span(sp, 0.3, 0.4);
+    hAtoms.forEach((g, i) => g.setAttribute("opacity", i < nH && sp > 0.1 ? 1 : 0));
+    oAtomG.setAttribute("opacity", oIn);
+    const wL = sp > 0.1 ? nH : 0, wR = 16 * oIn;
+    const target = clamp((wR - wL) / 16, -1, 1) * 14;
+    const ang = target + 1.2 * Math.sin(t * 4) * Math.abs(target) / 14;
+    $("beam").setAttribute("transform", `rotate(${ang} 270 330)`);
+    const rad = (ang * Math.PI) / 180;
+    // ימין = צד החמצן, שמאל = צד המימן
+    const lx = 270 - 160 * Math.cos(rad), ly = 330 - 160 * Math.sin(rad);
+    const rx_ = 270 + 160 * Math.cos(rad), ry_ = 330 + 160 * Math.sin(rad);
+    $("panL").setAttribute("transform", `translate(${lx} ${ly})`);
+    $("panR").setAttribute("transform", `translate(${rx_} ${ry_})`);
+    C("hLbl", 0.15); C("oLbl", 0.35); C("h16", 0.7); C("table", 0.85);
+  }
+
+  if (sc.id === "hist2") {
+    const fill = (arr, x0, y0) => arr.forEach((a, i) => {
+      const v = span(sp, 0.3 + i * 0.02, 0.33 + i * 0.02);
+      const x = x0 + 95 + 70 * Math.sin(t * a.w + a.ph);
+      const y = y0 + 150 + 115 * Math.sin(t * a.w * 0.83 + a.ph2);
+      a.g.setAttribute("transform", `translate(${x} ${y}) scale(${v})`);
+    });
+    fill(gasA, 60, 250); fill(gasB, 290, 250);
+    const c = span(sp, 0.55, 0.62);
+    $("cntA").setAttribute("opacity", c); $("cntB").setAttribute("opacity", c);
+    C("avoYear", 0.02); C("avoRule", 0.5); C("avoMass", 0.72);
+  }
+
+  if (sc.id === "define") {
+    const w = ease(span(sp, 0.66, 0.72)); // מעבר מפחמן למים
+    $("tileC").setAttribute("opacity", 1 - w); $("tileW").setAttribute("opacity", w);
+    const pc = span(sp, 0.4, 0.58), pw = span(sp, 0.74, 0.9);
+    pile.forEach((p) => {
+      const vc = span(pc, p.d * 0.8, p.d * 0.8 + 0.2) * (1 - w);
+      const vw = span(pw, p.d * 0.8, p.d * 0.8 + 0.2);
+      p.gc.setAttribute("transform", `translate(${p.x} ${p.y - (1 - vc) * 40}) scale(${vc})`);
+      p.gw.setAttribute("transform", `translate(${p.x} ${p.y - (1 - vw) * 40}) scale(${0.8 * vw})`);
+    });
+    const g = w < 0.5 ? Math.round(12 * ease(pc)) : Math.round(18 * ease(pw));
+    $("scaleNum").textContent = `${g} גרם`;
+    showChip("oneMol", (span(sp, 0.55, 0.6) * (1 - span(sp, 0.64, 0.68)) + span(sp, 0.9, 0.95)) * vis);
+  }
+
+  if (sc.id === "measure") {
+    tlItems.forEach((g, i) => {
+      const v = ease(span(sp, [0.0, 0.15, 0.6][i], [0.08, 0.23, 0.68][i]));
+      g.setAttribute("opacity", v);
+      g.setAttribute("transform", `translate(${(1 - v) * -20} 0)`);
+    });
+  }
+
+  if (sc.id === "bridge") {
+    // סדר הופעה: גרמים, חילוק, מולים, כפל, חלקיקים
+    const order = [0, 3, 1, 4, 2], at = [0.15, 0.22, 0.32, 0.4, 0.46];
+    order.forEach((idx, j) => {
+      const g = flowItems[idx], v = ease(span(sp, at[j], at[j] + 0.05));
+      g.setAttribute("opacity", v);
+      if (g.dataset.op && !g.dataset.sized) {
+        const tx = g.querySelector("text"), bgR = g.querySelector(".opbg");
+        const w = tx.getComputedTextLength() + 24;
+        if (w > 30) { bgR.setAttribute("width", w); bgR.setAttribute("x", 270 - w / 2); g.dataset.sized = 1; }
+      }
+    });
+    const k = (t * 0.45) % 1;
+    $("runner").setAttribute("cx", 270);
+    $("runner").setAttribute("cy", lerp(240, 560, k));
+    $("runner").setAttribute("opacity", sp > 0.46 ? Math.sin(Math.PI * k) : 0);
+    C("ex", 0.7);
+  }
+
+  if (sc.id === "reaction") {
+    const k = ease(span(sp, 0.38, 0.55));
+    rx.forEach((a) => {
+      const x = lerp(a.from[0], a.to[0], k), y = lerp(a.from[1], a.to[1], k) + 3 * Math.sin(t * 3 + a.from[0]);
+      a.g.setAttribute("transform", `translate(${x} ${y}) scale(${span(sp, 0.08, 0.16)})`);
+    });
+    $("rxArrow").setAttribute("opacity", span(sp, 0.3, 0.38));
+    C("rxTop", 0.2); C("rxBot", 0.55); C("rxMol", 0.68); C("rxGram", 0.82);
+  }
+
+  if (sc.id === "outro") {
+    $("outBig").setAttribute("opacity", ease(span(local, 0.1, 0.8)));
+    $("outSub").setAttribute("opacity", ease(span(sp, 0.2, 0.3)));
+    const a = span(sp, 0.4, 0.6);
+    $("arch").setAttribute("stroke-dashoffset", -t * 30);
+    $("arch").setAttribute("opacity", a);
+    outAtoms.forEach((o) => {
+      const ang = o.a + t * o.w;
+      o.g.setAttribute("transform", `translate(${140 + Math.cos(ang) * o.r} ${610 + Math.sin(ang) * o.r * 0.7}) scale(${span(sp, 0.4, 0.5)})`);
+    });
+    $("outScale").setAttribute("opacity", span(sp, 0.5, 0.6));
+    C("outNum", 0.6);
+  }
+};
+</script>
+</body>
+</html>
